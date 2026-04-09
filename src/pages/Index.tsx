@@ -158,23 +158,17 @@ export default function Index() {
       {/* Scan CTA */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-6">
         {/* Single product */}
-        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-          <p className="text-muted-foreground text-sm text-center whitespace-nowrap">
-            צלם את הנתונים על האריזה כדי לחשב את המחיר ליחידה
-          </p>
-          <ScanButton onClick={() => setState({ step: "camera", mode: "package" })} />
-        </div>
+        <ScanButton
+          onClick={() => setState({ step: "camera", mode: "package" })}
+          description="צלם את הנתונים על האריזה כדי לחשב את המחיר ליחידה"
+        />
 
         {/* Comparison mode */}
-        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-          <ScanButton
-            label="סרוק מוצרים"
-            onClick={() => setState({ step: "camera", mode: "comparison" })}
-          />
-          <p className="text-muted-foreground text-xs text-center">
-            צלם את המוצרים כדי לחשב ולהשוות את מחירם
-          </p>
-        </div>
+        <ScanButton
+          label="סרוק מוצרים"
+          onClick={() => setState({ step: "camera", mode: "comparison" })}
+          description="צלם את המוצרים כדי לחשב ולהשוות את מחירם"
+        />
       </div>
 
       {/* History */}

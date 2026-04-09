@@ -1,10 +1,8 @@
-import { useState } from "react";
-import { ArrowRight, Pencil, Check, Trophy, X } from "lucide-react";
+import { ArrowRight, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ProductVariant, ComparisonResult } from "@/types/comparison";
-import { rankVariants, recalcPricePer100g } from "@/lib/comparison";
+import { getUnitLabel } from "@/lib/comparison";
 
 interface ComparisonResultsProps {
   result: ComparisonResult;
@@ -12,20 +10,7 @@ interface ComparisonResultsProps {
 }
 
 export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
-  const [variants, setVariants] = useState<ProductVariant[]>(result.variants);
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  const handleEdit = (id: string, field: "price" | "weight", value: string) => {
-    setVariants((prev) => {
-      const updated = prev.map((v) => {
-        if (v.id !== id) return v;
-        const num = value === "" ? null : parseFloat(value);
-        const patched = { ...v, [field]: isNaN(num as number) ? null : num };
-        return recalcPricePer100g(patched);
-      });
-      return rankVariants(updated);
-    });
-  };
+  const { variants } = result;
 
   const rankColor = (rank?: "best" | "mid" | "worst") => {
     switch (rank) {
@@ -44,20 +29,20 @@ export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
     switch (rank) {
       case "best":
         return (
-          <Badge className="bg-green-500 text-white text-[10px] gap-1">
-            <Trophy className="size-3" />
+          <Badge className="bg-green-500 text-white text-[9px] gap-0.5 px-1.5 py-0">
+            <Trophy className="size-2.5" />
             הכי משתלם
           </Badge>
         );
       case "mid":
         return (
-          <Badge className="bg-yellow-500 text-white text-[10px]">
+          <Badge className="bg-yellow-500 text-white text-[9px] px-1.5 py-0">
             ממוצע
           </Badge>
         );
       case "worst":
         return (
-          <Badge className="bg-red-500 text-white text-[10px]">
+          <Badge className="bg-red-500 text-white text-[9px] px-1.5 py-0">
             יקר
           </Badge>
         );
@@ -67,7 +52,7 @@ export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col">
+    <div className="min-h-[100dvh] bg-background flex flex-col" dir="rtl">
       {/* Header */}
       <header className="p-4 flex items-center gap-3 border-b border-border">
         <Button variant="ghost" size="icon" onClick={onClose}>
@@ -81,8 +66,8 @@ export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
         </div>
       </header>
 
-      {/* Results */}
-      <div className="flex-1 overflow-auto p-4">
+      {/* Results Grid */}
+      <div className="flex-1 overflow-auto p-3">
         {variants.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
             <p className="text-sm">לא נמצאו מוצרים בתמונה</p>
@@ -91,97 +76,71 @@ export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {variants.map((v, idx) => (
-              <div
-                key={v.id}
-                className={`rounded-xl border-2 p-4 transition-all duration-200 ${rankColor(v.rank)}`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-muted-foreground bg-muted rounded-full w-6 h-6 flex items-center justify-center">
-                        {idx + 1}
-                      </span>
-                      {rankBadge(v.rank)}
-                    </div>
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {v.brandName || "מותג לא ידוע"}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {v.productName || "מוצר לא ידוע"}
-                    </p>
-                    {v.characteristics && (
-                      <p className="text-xs text-muted-foreground/70 mt-0.5">
-                        {v.characteristics}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-left shrink-0">
-                    {v.pricePer100g != null ? (
-                      <>
-                        <p className="text-lg font-bold text-foreground">
-                          ₪{v.pricePer100g.toFixed(2)}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">ל-100 גרם</p>
-                      </>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">לא חושב</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Edit mode */}
-                {editingId === v.id ? (
-                  <div className="flex gap-2 items-end mt-3 pt-3 border-t border-border/50">
-                    <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground mb-1 block">מחיר (₪)</label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={v.price ?? ""}
-                        onChange={(e) => handleEdit(v.id, "price", e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground mb-1 block">משקל (גרם)</label>
-                      <Input
-                        type="number"
-                        value={v.weight ?? ""}
-                        onChange={(e) => handleEdit(v.id, "weight", e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => setEditingId(null)}
-                    >
-                      <Check className="size-4 text-primary" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
-                    <div className="flex gap-3 text-xs text-muted-foreground">
-                      {v.price != null && <span>₪{v.price.toFixed(2)}</span>}
-                      {v.weight != null && <span>{v.weight} גרם</span>}
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 text-xs gap-1 text-muted-foreground"
-                      onClick={() => setEditingId(v.id)}
-                    >
-                      <Pencil className="size-3" />
-                      עריכה
-                    </Button>
-                  </div>
-                )}
-              </div>
+          <div className="grid grid-cols-3 gap-2">
+            {variants.map((v) => (
+              <VariantCard key={v.id} variant={v} rankColor={rankColor} rankBadge={rankBadge} />
             ))}
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VariantCard({
+  variant: v,
+  rankColor,
+  rankBadge,
+}: {
+  variant: ProductVariant;
+  rankColor: (rank?: "best" | "mid" | "worst") => string;
+  rankBadge: (rank?: "best" | "mid" | "worst") => React.ReactNode;
+}) {
+  const unitLabel = getUnitLabel(v.unit);
+
+  return (
+    <div
+      className={`rounded-xl border-2 p-2 flex flex-col gap-1.5 transition-all duration-200 ${rankColor(v.rank)}`}
+    >
+      {/* Badge */}
+      <div className="flex justify-center">{rankBadge(v.rank)}</div>
+
+      {/* Product info */}
+      <div className="text-center min-w-0">
+        <p className="text-xs font-bold text-foreground truncate leading-tight">
+          {v.brandName || "מותג לא ידוע"}
+        </p>
+        <p className="text-[10px] text-muted-foreground truncate leading-tight">
+          {v.productName || "מוצר"}
+        </p>
+        {v.characteristics && (
+          <p className="text-[9px] text-muted-foreground/70 truncate leading-tight">
+            {v.characteristics}
+          </p>
+        )}
+      </div>
+
+      {/* Price per 100 */}
+      <div className="text-center mt-auto pt-1 border-t border-border/30">
+        {v.pricePer100 != null ? (
+          <>
+            <p className="text-sm font-bold text-foreground leading-none">
+              ₪{v.pricePer100.toFixed(2)}
+            </p>
+            <p className="text-[9px] text-muted-foreground">ל-100 {unitLabel}</p>
+          </>
+        ) : (
+          <p className="text-[10px] text-muted-foreground">לא חושב</p>
+        )}
+      </div>
+
+      {/* Raw data */}
+      <div className="flex flex-col items-center gap-0 text-[9px] text-muted-foreground/60">
+        {v.price != null && <span>₪{v.price.toFixed(2)}</span>}
+        {v.weight != null && (
+          <span>
+            {v.weight} {v.unit}
+          </span>
         )}
       </div>
     </div>

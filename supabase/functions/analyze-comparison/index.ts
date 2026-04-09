@@ -47,7 +47,7 @@ serve(async (req) => {
                 },
                 {
                   type: "text",
-                  text: `Analyze the image to identify the main product category (e.g., tuna cans, pasta, rice, etc.). Identify all variants of this product in the image. For each variant, extract its brand name, product name, unique characteristics (e.g., 'in olive oil' vs 'in water'), weight in grams, and price in ILS (from the shelf label or the product itself). Return the category and an array of variants.`,
+                  text: `Analyze the image to identify the main product category (e.g., tuna cans, pasta, drinks, cleaning products, etc.). Identify all variants of this product in the image. For each variant, extract its brand name, product name, unique characteristics (e.g., 'in olive oil' vs 'in water'), weight/volume amount as a number, the measurement unit (one of: g, ml, liter, kg, units), and price in ILS (from the shelf label or the product itself). Use the appropriate unit for the product type: grams for solid foods, ml/liter for liquids, units for countable items. Return the category and an array of variants.`,
                 },
               ],
             },
@@ -86,7 +86,11 @@ serve(async (req) => {
                           },
                           weight: {
                             type: ["number", "null"],
-                            description: "Weight in grams",
+                            description: "Weight or volume amount as a number",
+                          },
+                          unit: {
+                            type: "string",
+                            description: "Measurement unit: g, ml, liter, kg, or units",
                           },
                           price: {
                             type: ["number", "null"],
@@ -98,6 +102,7 @@ serve(async (req) => {
                           "productName",
                           "characteristics",
                           "weight",
+                          "unit",
                           "price",
                         ],
                       },
