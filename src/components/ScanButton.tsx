@@ -1,11 +1,14 @@
-import { Camera } from "lucide-react";
+import { Camera, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ScanButtonProps {
   onClick: () => void;
+  label?: string;
 }
 
-export function ScanButton({ onClick }: ScanButtonProps) {
+export function ScanButton({ onClick, label = "סרוק מוצר" }: ScanButtonProps) {
+  const isComparison = label === "סרוק מוצרים";
+
   return (
     <Button
       variant="scan"
@@ -13,8 +16,8 @@ export function ScanButton({ onClick }: ScanButtonProps) {
       onClick={onClick}
       className="w-full max-w-xs h-16 rounded-2xl animate-pulse-scan"
     >
-      <Camera className="!size-6" />
-      סרוק מוצר
+      {isComparison ? <BarChart3 className="!size-6" /> : <Camera className="!size-6" />}
+      {label}
     </Button>
   );
 }

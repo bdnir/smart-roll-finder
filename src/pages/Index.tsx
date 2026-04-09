@@ -5,16 +5,20 @@ import { ScanButton } from "@/components/ScanButton";
 import { ProductCard } from "@/components/ProductCard";
 import { CameraCapture } from "@/components/CameraCapture";
 import { ValidationScreen } from "@/components/ValidationScreen";
+import { ComparisonResults } from "@/components/ComparisonResults";
 import { analyzeImage } from "@/lib/ai";
+import { analyzeComparison } from "@/lib/comparison";
 import { getHistory, clearHistory } from "@/lib/storage";
 import { AIExtraction, ScanResult } from "@/types/scan";
+import { ComparisonResult } from "@/types/comparison";
 import { useToast } from "@/hooks/use-toast";
 
 type AppState =
   | { step: "home" }
-  | { step: "camera"; mode: "package" | "price"; pendingExtraction?: AIExtraction; pendingImage?: string }
-  | { step: "loading"; imageDataUrl: string; pendingExtraction?: AIExtraction }
-  | { step: "validation"; extraction: AIExtraction; imageDataUrl?: string };
+  | { step: "camera"; mode: "package" | "price" | "comparison"; pendingExtraction?: AIExtraction; pendingImage?: string }
+  | { step: "loading"; imageDataUrl: string; loadingMode: "single" | "comparison"; pendingExtraction?: AIExtraction }
+  | { step: "validation"; extraction: AIExtraction; imageDataUrl?: string }
+  | { step: "comparison-results"; result: ComparisonResult };
 
 export default function Index() {
   const [state, setState] = useState<AppState>({ step: "home" });
@@ -28,9 +32,26 @@ export default function Index() {
   const refreshHistory = () => setHistory(getHistory());
 
   const handleCapture = async (imageBase64: string) => {
+    // Comparison mode
+    if (state.step === "camera" && state.mode === "comparison") {
+      setState({ step: "loading", imageDataUrl: imageBase64, loadingMode: "comparison" });
+      try {
+        const result = await analyzeComparison(imageBase64);
+        setState({ step: "comparison-results", result });
+      } catch (e) {
+        toast({
+          title: "שגיאה",
+          description: e instanceof Error ? e.message : "שגיאה לא ידועה",
+          variant: "destructive",
+        });
+        setState({ step: "home" });
+      }
+      return;
+    }
+
+    // Price tag scan for existing package
     if (state.step === "camera" && state.mode === "price" && state.pendingExtraction) {
-      // scanning price tag for a previously scanned package
-      setState({ step: "loading", imageDataUrl: imageBase64, pendingExtraction: state.pendingExtraction });
+      setState({ step: "loading", imageDataUrl: imageBase64, loadingMode: "single", pendingExtraction: state.pendingExtraction });
       try {
         const priceResult = await analyzeImage(imageBase64);
         setState({
@@ -49,7 +70,8 @@ export default function Index() {
       return;
     }
 
-    setState({ step: "loading", imageDataUrl: imageBase64 });
+    // Single product scan
+    setState({ step: "loading", imageDataUrl: imageBase64, loadingMode: "single" });
     try {
       const extraction = await analyzeImage(imageBase64);
       setState({ step: "validation", extraction, imageDataUrl: imageBase64 });
@@ -80,9 +102,11 @@ export default function Index() {
 
   if (state.step === "loading") {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center gap-4">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-muted-foreground font-medium">מנתח את התמונה...</p>
+        <p className="text-muted-foreground font-medium">
+          {state.loadingMode === "comparison" ? "מנתח ומשווה מוצרים..." : "מנתח את התמונה..."}
+        </p>
       </div>
     );
   }
@@ -106,9 +130,18 @@ export default function Index() {
     );
   }
 
+  if (state.step === "comparison-results") {
+    return (
+      <ComparisonResults
+        result={state.result}
+        onClose={() => setState({ step: "home" })}
+      />
+    );
+  }
+
   // Home
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Header */}
       <header className="p-5 pb-2">
         <div className="flex items-center gap-3">
@@ -123,11 +156,25 @@ export default function Index() {
       </header>
 
       {/* Scan CTA */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-4">
-        <p className="text-muted-foreground text-sm text-center max-w-[240px]">
-          צלם את הנתונים על האריזה כדי לחשב את המחיר ליחידה
-        </p>
-        <ScanButton onClick={() => setState({ step: "camera", mode: "package" })} />
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-6">
+        {/* Single product */}
+        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
+          <p className="text-muted-foreground text-sm text-center whitespace-nowrap">
+            צלם את הנתונים על האריזה כדי לחשב את המחיר ליחידה
+          </p>
+          <ScanButton onClick={() => setState({ step: "camera", mode: "package" })} />
+        </div>
+
+        {/* Comparison mode */}
+        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
+          <ScanButton
+            label="סרוק מוצרים"
+            onClick={() => setState({ step: "camera", mode: "comparison" })}
+          />
+          <p className="text-muted-foreground text-xs text-center">
+            צלם את המוצרים כדי לחשב ולהשוות את מחירם
+          </p>
+        </div>
       </div>
 
       {/* History */}
