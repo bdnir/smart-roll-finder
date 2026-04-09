@@ -117,7 +117,7 @@ export default function Index() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">BuySmart</h1>
-            <p className="text-xs text-muted-foreground">מחשבון עלות לדף</p>
+            <p className="text-xs text-muted-foreground">מחשבון עלות</p>
           </div>
         </div>
       </header>
@@ -125,7 +125,7 @@ export default function Index() {
       {/* Scan CTA */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-4">
         <p className="text-muted-foreground text-sm text-center max-w-[240px]">
-          צלם את אריזת נייר הטואלט כדי לחשב את המחיר לדף
+          צלם את הנתונים על האריזה כדי לחשב את המחיר ליחידה
         </p>
         <ScanButton onClick={() => setState({ step: "camera", mode: "package" })} />
       </div>
