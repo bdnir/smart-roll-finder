@@ -47,7 +47,7 @@ serve(async (req) => {
                 },
                 {
                   type: "text",
-                  text: `Analyze the image to identify the main product category (e.g., tuna cans, pasta, drinks, cleaning products, etc.). Identify all variants of this product in the image. For each variant, extract its brand name, product name, unique characteristics (e.g., 'in olive oil' vs 'in water'), weight/volume amount as a number, the measurement unit (one of: g, ml, liter, kg, units), and price in ILS (from the shelf label or the product itself). Use the appropriate unit for the product type: grams for solid foods, ml/liter for liquids, units for countable items. Return the category and an array of variants.`,
+                  text: `Analyze the image to identify the main product category (e.g., tuna cans, pasta, drinks, cleaning products, etc.). Identify all variants of this product in the image. For each variant, extract its brand name, product name, unique characteristics (e.g., 'in olive oil' vs 'in water'), weight/volume amount as a number, the measurement unit (one of: g, ml, liter, kg, units), and price in ILS (from the shelf label or the product itself). Also provide approximate bounding box coordinates for each product as percentages of the image dimensions (x, y for top-left corner, w, h for width and height, all as 0-100 values). Use the appropriate unit for the product type: grams for solid foods, ml/liter for liquids, units for countable items. Return the category and an array of variants.`,
                 },
               ],
             },
@@ -95,6 +95,17 @@ serve(async (req) => {
                           price: {
                             type: ["number", "null"],
                             description: "Price in ILS",
+                          },
+                          bbox: {
+                            type: "object",
+                            description: "Bounding box as percentage of image (0-100)",
+                            properties: {
+                              x: { type: "number", description: "Left edge %" },
+                              y: { type: "number", description: "Top edge %" },
+                              w: { type: "number", description: "Width %" },
+                              h: { type: "number", description: "Height %" },
+                            },
+                            required: ["x", "y", "w", "h"],
                           },
                         },
                         required: [
