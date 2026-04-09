@@ -1,4 +1,4 @@
-import { ArrowRight, Trophy } from "lucide-react";
+import { ArrowRight, Trophy, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductVariant, ComparisonResult } from "@/types/comparison";
@@ -102,6 +102,19 @@ function VariantCard({
     <div
       className={`rounded-xl border-2 p-2 flex flex-col gap-1.5 transition-all duration-200 ${rankColor(v.rank)}`}
     >
+      {/* Cropped product image */}
+      <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+        {v.croppedImage ? (
+          <img
+            src={v.croppedImage}
+            alt={v.brandName || "מוצר"}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <Package className="size-8 text-muted-foreground/40" />
+        )}
+      </div>
+
       {/* Badge */}
       <div className="flex justify-center">{rankBadge(v.rank)}</div>
 
