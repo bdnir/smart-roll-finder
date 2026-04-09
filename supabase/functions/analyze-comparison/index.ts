@@ -102,6 +102,7 @@ serve(async (req) => {
                           "productName",
                           "characteristics",
                           "weight",
+                          "unit",
                           "price",
                         ],
                       },
