@@ -71,14 +71,15 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-foreground/95 flex flex-col">
-      <div className="flex-1 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-foreground/95 flex flex-col" style={{ height: '100dvh' }}>
+      <div className="flex-1 relative overflow-hidden min-h-0">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className="w-full h-full object-cover"
+          style={{ WebkitTransform: 'translateZ(0)' }}
         />
         {/* Frame overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -94,7 +95,7 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
         </p>
       </div>
 
-      <div className="bg-background p-6 flex items-center justify-between safe-area-bottom">
+      <div className="bg-background p-6 flex items-center justify-between" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
         <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
           <X className="!size-6" />
         </Button>
