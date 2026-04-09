@@ -117,7 +117,7 @@ export default function Index() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">BuySmart</h1>
-            <p className="text-xs text-muted-foreground">מחשבון עלות לדף</p>
+            <p className="text-xs text-muted-foreground">מחשבון עלות</p>
           </div>
         </div>
       </header>
