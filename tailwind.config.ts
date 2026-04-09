@@ -87,7 +87,7 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "pulse-scan": "pulse-scan 3s ease-in-out infinite",
+        "pulse-scan": "pulse-scan 5s ease-in-out infinite",
         "slide-up": "slide-up 0.3s ease-out",
       },
     },
