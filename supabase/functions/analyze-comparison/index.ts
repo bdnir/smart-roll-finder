@@ -115,6 +115,7 @@ serve(async (req) => {
                           "weight",
                           "unit",
                           "price",
+                          "bbox",
                         ],
                       },
                     },
