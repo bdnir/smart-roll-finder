@@ -96,4 +96,131 @@ export default function Index() {
       toast({
         title: "שגיאה",
         description: isBlurry
-          ? "התמונה לא בר
+          ? "התמונה לא ברורה, נסה לצלם מקרוב יותר ובתאורה טובה"
+          : e instanceof Error ? e.message : "שגיאה לא ידועה",
+        variant: "destructive",
+      });
+      setState({ step: "home" });
+    }
+  };
+
+  const handleDone = (_result: ScanResult) => {
+    refreshHistory();
+    setState({ step: "home" });
+    toast({ title: "נשמר!", description: "התוצאה נשמרה בהצלחה" });
+  };
+
+  if (state.step === "camera") {
+    return (
+      <CameraCapture
+        onCapture={handleCapture}
+        onClose={() => setState({ step: "home" })}
+      />
+    );
+  }
+
+  if (state.step === "loading") {
+    return (
+      <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center gap-4">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-muted-foreground font-medium">
+          {state.loadingMode === "comparison" ? "מנתח ומשווה מוצרים..." : "מנתח את התמונה..."}
+        </p>
+      </div>
+    );
+  }
+
+  if (state.step === "validation") {
+    return (
+      <ValidationScreen
+        extraction={state.extraction}
+        imageDataUrl={state.imageDataUrl}
+        onDone={handleDone}
+        onScanPrice={() =>
+          setState({
+            step: "camera",
+            mode: "price",
+            pendingExtraction: state.extraction,
+            pendingImage: state.imageDataUrl,
+          })
+        }
+        onCancel={() => setState({ step: "home" })}
+      />
+    );
+  }
+
+  if (state.step === "comparison-results") {
+    return (
+      <ComparisonResults
+        result={state.result}
+        onClose={() => setState({ step: "home" })}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-[100dvh] bg-background flex flex-col">
+      {/* Header */}
+      <header className="p-5 pb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl scan-button-gradient flex items-center justify-center">
+            <ShoppingCart className="text-primary-foreground size-5" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">BuySmart</h1>
+            <p className="text-xs text-muted-foreground">מחשבון עלות</p>
+          </div>
+        </div>
+      </header>
+
+      {/* Scan CTA */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-6">
+        {/* Single product container with coordinated animation */}
+        <div className="relative w-full max-w-xs animate-scan-glow">
+          <ScanButton
+            onClick={() => handleScanStart("package")}
+            description="צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה"
+          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setHelpOpen(true);
+            }}
+            className="absolute top-2 left-2 p-1.5 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors z-10"
+            aria-label="עזרה"
+          >
+            <Info className="size-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* History */}
+      {history.length > 0 && (
+        <div className="px-4 pb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-foreground">סריקות אחרונות</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                clearHistory();
+                refreshHistory();
+              }}
+              className="text-xs text-muted-foreground"
+            >
+              <Trash2 className="size-3" />
+              נקה
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {history.map((item) => (
+              <ProductCard key={item.id} result={item} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
+    </div>
+  );
+}
