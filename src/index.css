@@ -4,67 +4,58 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 1. הגדרת האנימציה - מחוץ לשכבות כדי להבטיח עדיפות */
+/* הגדרת האנימציה המעודכנת */
 @keyframes slow-pulse {
   0%, 100% { 
     opacity: 1; 
     transform: scale(1); 
   }
   50% { 
-    opacity: 0.3; 
-    transform: scale(1.05); 
+    /* הפחתנו את עוצמת ההבהוב ב-30% - עכשיו הוא נשאר יותר סולידי */
+    opacity: 0.6; 
+    /* הגדלה עדינה */
+    transform: scale(1.04); 
   }
 }
 
-/* 2. החלת האנימציה על הכפתור ועל כל מה שבתוכו (כולל האייקון החדש) */
+/* החלת האנימציה על המעטפת */
 .animate-scan-glow {
-  animation: slow-pulse 1.5s ease-in-out infinite !important;
+  animation: slow-pulse 2s ease-in-out infinite !important;
 }
 
-/* מוודא שכל הילדים (טקסט, אייקונים, סימן i) יורשים את השקיפות והאנימציה */
+/* התיקון לאייקון ה-i: גורם לו לרשת גם את שינוי הגודל וגם את השקיפות */
 .animate-scan-glow *, 
-.animate-scan-glow svg, 
-.animate-scan-glow span {
+.animate-scan-glow svg {
   animation: inherit !important;
   opacity: inherit !important;
+  transform-origin: center; /* מבטיח שההגדלה תהיה מהמרכז */
 }
 
 @layer base {
   :root {
     --background: 150 20% 97%;
     --foreground: 200 25% 10%;
-
     --card: 0 0% 100%;
     --card-foreground: 200 25% 10%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 200 25% 10%;
-
     --primary: 162 63% 41%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 150 15% 92%;
     --secondary-foreground: 200 25% 15%;
-
     --muted: 150 10% 94%;
     --muted-foreground: 200 10% 45%;
-
     --accent: 38 92% 60%;
     --accent-foreground: 30 50% 15%;
-
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 150 15% 88%;
     --input: 150 15% 88%;
     --ring: 162 63% 41%;
-
     --radius: 1rem;
-
     --scan-gradient: linear-gradient(135deg, hsl(162 63% 41%), hsl(170 60% 35%));
     --card-shadow: 0 2px 12px -2px hsl(200 25% 10% / 0.06);
     --card-shadow-hover: 0 8px 24px -4px hsl(200 25% 10% / 0.1);
-
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -102,11 +93,9 @@
   * {
     @apply border-border;
   }
-
   html {
     direction: rtl;
   }
-
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Rubik', sans-serif;
@@ -117,11 +106,9 @@
   .scan-button-gradient {
     background: var(--scan-gradient);
   }
-
   .card-elevated {
     box-shadow: var(--card-shadow);
   }
-
   .card-elevated:hover {
     box-shadow: var(--card-shadow-hover);
   }
