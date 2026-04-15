@@ -1,13 +1,14 @@
-import { Camera, BarChart3 } from "lucide-react";
+import { Camera, BarChart3, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ScanButtonProps {
   onClick: () => void;
   label?: string;
   description?: string;
+  onHelpClick?: (e: React.MouseEvent) => void;
 }
 
-export function ScanButton({ onClick, label = "סרוק מוצר", description }: ScanButtonProps) {
+export function ScanButton({ onClick, label = "סרוק מוצר", description, onHelpClick }: ScanButtonProps) {
   const isComparison = label === "סרוק מוצרים";
 
   return (
@@ -23,9 +24,21 @@ export function ScanButton({ onClick, label = "סרוק מוצר", description }
       </span>
       
       {description && (
-        <span className="text-[11px] font-normal opacity-80 leading-tight text-center px-2">
-          {description}
-        </span>
+        <div className="flex items-center justify-center gap-1.5 px-2">
+          <span className="text-[11px] font-normal opacity-80 leading-tight text-center">
+            {description}
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onHelpClick?.(e);
+            }}
+            className="p-0.5 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors shrink-0"
+            aria-label="עזרה"
+          >
+            <Info className="size-3.5" />
+          </button>
+        </div>
       )}
     </Button>
   );
