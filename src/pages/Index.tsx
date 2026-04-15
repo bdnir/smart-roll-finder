@@ -175,7 +175,6 @@ export default function Index() {
 
       {/* Scan CTA */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-6">
-        {/* Single product container with coordinated animation */}
         <div className="relative w-full max-w-xs animate-scan-glow">
           <ScanButton
             onClick={() => handleScanStart("package")}
