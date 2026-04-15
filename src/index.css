@@ -34,5 +34,5 @@
 }
 
 .animate-scan-glow {
-  animation: slow-pulse 3.5s ease-in-out infinite !important;
+  animation: slow-pulse 2s ease-in-out infinite !important;
 }
