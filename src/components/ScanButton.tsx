@@ -1,4 +1,4 @@
-import { Camera, BarChart3, Info } from "lucide-react";
+import { Camera, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ScanButtonProps {
@@ -17,11 +17,6 @@ export function ScanButton({ onClick, label = "סרוק מוצר", description }
       onClick={onClick}
       className="w-full max-w-xs min-h-[5rem] rounded-2xl animate-scan-glow flex flex-col items-center justify-center gap-1 py-3 relative overflow-hidden"
     >
-      {/* אייקון ה-i החדש - ממוקם בפינה העליונה */}
-      <div className="absolute top-2 right-3 opacity-70">
-        <Info className="size-4" />
-      </div>
-
       <span className="flex items-center gap-2 text-base font-bold">
         {isComparison ? <BarChart3 className="!size-5" /> : <Camera className="!size-5" />}
         {label}
