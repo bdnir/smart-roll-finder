@@ -77,7 +77,7 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "slow-glow": "slow-glow 111s ease-in-out infinite",
+        "slow-glow": "slow-glow 1s ease-in-out infinite",
         "slide-up": "slide-up 0.3s ease-out",
       },
     },
