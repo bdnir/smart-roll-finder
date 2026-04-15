@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, Trash2 } from "lucide-react";
+import { ShoppingCart, Trash2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScanButton } from "@/components/ScanButton";
 import { ProductCard } from "@/components/ProductCard";
 import { CameraCapture } from "@/components/CameraCapture";
 import { ValidationScreen } from "@/components/ValidationScreen";
 import { ComparisonResults } from "@/components/ComparisonResults";
+import { HelpModal } from "@/components/HelpModal";
 import { analyzeImage } from "@/lib/ai";
 import { analyzeComparison } from "@/lib/comparison";
 import { getHistory, clearHistory } from "@/lib/storage";
+import { checkQuota, QuotaExceededError } from "@/lib/scan-service";
 import { AIExtraction, ScanResult } from "@/types/scan";
 import { ComparisonResult } from "@/types/comparison";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +25,7 @@ type AppState =
 export default function Index() {
   const [state, setState] = useState<AppState>({ step: "home" });
   const [history, setHistory] = useState<ScanResult[]>([]);
+  const [helpOpen, setHelpOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,6 +33,24 @@ export default function Index() {
   }, []);
 
   const refreshHistory = () => setHistory(getHistory());
+
+  const handleScanStart = async (mode: "package" | "comparison") => {
+    try {
+      const allowed = await checkQuota();
+      if (!allowed) {
+        toast({
+          title: "מגבלת שימוש",
+          description: "מצטערים, עקב עומס שימוש השירות אינו זמין כרגע. השירות יתחדש מחר.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setState({ step: "camera", mode });
+    } catch {
+      // Allow on network error
+      setState({ step: "camera", mode });
+    }
+  };
 
   const handleCapture = async (imageBase64: string) => {
     // Comparison mode
@@ -39,11 +60,10 @@ export default function Index() {
         const result = await analyzeComparison(imageBase64);
         setState({ step: "comparison-results", result });
       } catch (e) {
-        toast({
-          title: "שגיאה",
-          description: e instanceof Error ? e.message : "שגיאה לא ידועה",
-          variant: "destructive",
-        });
+        const msg = e instanceof QuotaExceededError
+          ? e.message
+          : e instanceof Error ? e.message : "שגיאה לא ידועה";
+        toast({ title: "שגיאה", description: msg, variant: "destructive" });
         setState({ step: "home" });
       }
       return;
@@ -76,9 +96,12 @@ export default function Index() {
       const extraction = await analyzeImage(imageBase64);
       setState({ step: "validation", extraction, imageDataUrl: imageBase64 });
     } catch (e) {
+      const isBlurry = e instanceof Error && e.message.toLowerCase().includes("blur");
       toast({
         title: "שגיאה",
-        description: e instanceof Error ? e.message : "שגיאה לא ידועה",
+        description: isBlurry
+          ? "התמונה לא ברורה, נסה לצלם מקרוב יותר ובתאורה טובה"
+          : e instanceof Error ? e.message : "שגיאה לא ידועה",
         variant: "destructive",
       });
       setState({ step: "home" });
@@ -158,17 +181,26 @@ export default function Index() {
       {/* Scan CTA */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-6">
         {/* Single product */}
-        <ScanButton
-          onClick={() => setState({ step: "camera", mode: "package" })}
-          description="צלם את הנתונים על האריזה כדי לחשב את המחיר ליחידה"
-        />
+        <div className="relative w-full max-w-xs">
+          <ScanButton
+            onClick={() => handleScanStart("package")}
+            description="צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה"
+          />
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="absolute top-2 left-2 p-1 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+            aria-label="עזרה"
+          >
+            <HelpCircle className="size-5" />
+          </button>
+        </div>
 
-        {/* Comparison mode */}
-        <ScanButton
+        {/* Comparison mode - hidden for now */}
+        {/* <ScanButton
           label="סרוק מוצרים"
-          onClick={() => setState({ step: "camera", mode: "comparison" })}
+          onClick={() => handleScanStart("comparison")}
           description="צלם את המוצרים כדי לחשב ולהשוות את מחירם"
-        />
+        /> */}
       </div>
 
       {/* History */}
@@ -196,6 +228,8 @@ export default function Index() {
           </div>
         </div>
       )}
+
+      <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
     </div>
   );
 }

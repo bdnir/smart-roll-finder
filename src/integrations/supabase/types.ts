@@ -14,13 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      scans: {
+        Row: {
+          ai_raw_data: Json
+          created_at: string
+          device_id: string
+          id: string
+          image_path: string | null
+          is_manually_edited: boolean
+          user_edited_data: Json
+        }
+        Insert: {
+          ai_raw_data?: Json
+          created_at?: string
+          device_id: string
+          id?: string
+          image_path?: string | null
+          is_manually_edited?: boolean
+          user_edited_data?: Json
+        }
+        Update: {
+          ai_raw_data?: Json
+          created_at?: string
+          device_id?: string
+          id?: string
+          image_path?: string | null
+          is_manually_edited?: boolean
+          user_edited_data?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_scan_quota: {
+        Args: { p_device_id: string; p_limit?: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
