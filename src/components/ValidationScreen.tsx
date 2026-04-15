@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AIExtraction, ScanResult } from "@/types/scan";
 import { addToHistory } from "@/lib/storage";
+import { saveScan, uploadScanImage } from "@/lib/scan-service";
 
 interface ValidationScreenProps {
   extraction: AIExtraction;
@@ -25,6 +26,7 @@ export function ValidationScreen({
   const [sheets, setSheets] = useState(extraction.sheetsPerRoll?.toString() ?? "");
   const [company, setCompany] = useState(extraction.companyName ?? "");
   const [product, setProduct] = useState(extraction.productName ?? "");
+  const [saving, setSaving] = useState(false);
 
   const priceNum = parseFloat(price) || null;
   const rollsNum = parseInt(rolls) || null;
@@ -33,7 +35,8 @@ export function ValidationScreen({
   const canCalculate = priceNum && rollsNum && sheetsNum;
   const pricePerSheet = canCalculate ? priceNum / (rollsNum * sheetsNum) : null;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    setSaving(true);
     const result: ScanResult = {
       id: crypto.randomUUID(),
       companyName: company || null,
@@ -45,7 +48,21 @@ export function ValidationScreen({
       timestamp: Date.now(),
       imageDataUrl,
     };
+
+    // Check if user edited anything
+    const isEdited =
+      extraction.price?.toString() !== price ||
+      extraction.rolls?.toString() !== rolls ||
+      extraction.sheetsPerRoll?.toString() !== sheets ||
+      (extraction.companyName ?? "") !== company ||
+      (extraction.productName ?? "") !== product;
+
+    // Upload image & save to DB in background
+    const imagePath = imageDataUrl ? await uploadScanImage(imageDataUrl) : null;
+    await saveScan(extraction, result, isEdited, imagePath);
+
     addToHistory(result);
+    setSaving(false);
     onDone(result);
   };
 
@@ -64,18 +81,9 @@ export function ValidationScreen({
         <div className="bg-accent/20 border border-accent rounded-xl p-3 flex items-start gap-3">
           <AlertTriangle className="text-accent-foreground mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium text-accent-foreground">
-              המחיר לא זוהה
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              סרוק את תג המחיר או הזן ידנית
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={onScanPrice}
-            >
+            <p className="text-sm font-medium text-accent-foreground">המחיר לא זוהה</p>
+            <p className="text-xs text-muted-foreground mt-1">סרוק את תג המחיר או הזן ידנית</p>
+            <Button variant="outline" size="sm" className="mt-2" onClick={onScanPrice}>
               סרוק תג מחיר
             </Button>
           </div>
@@ -93,9 +101,7 @@ export function ValidationScreen({
       {pricePerSheet !== null && (
         <div className="bg-primary/10 rounded-2xl p-5 text-center mt-2">
           <p className="text-sm text-muted-foreground">מחיר לדף</p>
-          <p className="text-3xl font-bold text-primary mt-1">
-            ₪{pricePerSheet.toFixed(4)}
-          </p>
+          <p className="text-3xl font-bold text-primary mt-1">₪{pricePerSheet.toFixed(4)}</p>
         </div>
       )}
 
@@ -104,10 +110,14 @@ export function ValidationScreen({
           variant="scan"
           className="w-full h-14 rounded-xl"
           onClick={handleConfirm}
-          disabled={!canCalculate}
+          disabled={!canCalculate || saving}
         >
-          <Check className="!size-5" />
-          שמור תוצאה
+          {saving ? (
+            <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Check className="!size-5" />
+          )}
+          {saving ? "שומר..." : "שמור תוצאה"}
         </Button>
       </div>
     </div>
@@ -129,9 +139,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-xs font-medium text-muted-foreground mb-1 block">
-        {label}
-      </label>
+      <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
       <div className="relative">
         <Input
           type={type}
