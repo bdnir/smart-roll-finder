@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, Trash2, Info } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScanButton } from "@/components/ScanButton";
 import { ProductCard } from "@/components/ProductCard";
@@ -160,7 +160,6 @@ export default function Index() {
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
-      {/* Header */}
       <header className="p-5 pb-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl scan-button-gradient flex items-center justify-center">
@@ -173,27 +172,16 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Scan CTA */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-6">
         <div className="relative w-full max-w-xs animate-scan-glow">
           <ScanButton
             onClick={() => handleScanStart("package")}
             description="צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה"
+            onHelpClick={() => setHelpOpen(true)}
           />
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setHelpOpen(true);
-            }}
-            className="absolute top-2 left-2 p-1.5 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors z-10"
-            aria-label="עזרה"
-          >
-            <Info className="size-5" />
-          </button>
         </div>
       </div>
 
-      {/* History */}
       {history.length > 0 && (
         <div className="px-4 pb-6">
           <div className="flex items-center justify-between mb-3">
