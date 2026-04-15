@@ -12,13 +12,14 @@ export class QuotaExceededError extends Error {
 
 export async function checkQuota(): Promise<boolean> {
   const deviceId = getDeviceId();
-  const { data, error } = await supabase.rpc("check_scan_quota", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.rpc as any)("check_scan_quota", {
     p_device_id: deviceId,
     p_limit: 10,
   });
   if (error) {
     console.error("Quota check error:", error);
-    return true; // Allow on error
+    return true;
   }
   return data as boolean;
 }
