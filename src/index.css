@@ -21,18 +21,27 @@
   }
 }
 
-/* הגדרת האנימציה - מחוץ לכל שכבה כדי שתעבוד בוודאות */
+/* הגדרת האנימציה */
 @keyframes slow-pulse {
   0%, 100% { 
     opacity: 1; 
     transform: scale(1); 
   }
   50% { 
-    opacity: 0.7; 
-    transform: scale(1.02); 
+    opacity: 0.3; /* הבהוב חזק ומורגש */
+    transform: scale(1.05); /* הגדלה קלה של כל הכפתור */
   }
 }
 
+/* החלת האנימציה על הכפתור ועל כל הילדים שלו (כולל סימן השאלה) */
+.animate-scan-glow, 
+.animate-scan-glow * {
+  animation: inherit;
+}
+
 .animate-scan-glow {
-  animation: slow-pulse 2s ease-in-out infinite !important;
+  animation: slow-pulse 1.5s ease-in-out infinite !important;
+  /* מוודא שהאלמנטים הפנימיים לא "קופצים" */
+  transition: all 0.3s ease-in-out; 
+}  animation: slow-pulse 2s ease-in-out infinite !important;
 }
