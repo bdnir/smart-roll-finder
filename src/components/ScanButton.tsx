@@ -24,7 +24,7 @@ export function ScanButton({ onClick, label = "סרוק מוצר", description, 
       </span>
       
       {description && (
-        <div className="flex items-center justify-center gap-1.5 px-2">
+        <div className="flex items-center justify-center w-full px-4">
           <span className="text-[11px] font-normal opacity-80 leading-tight text-center">
             {description}
           </span>
@@ -33,7 +33,8 @@ export function ScanButton({ onClick, label = "סרוק מוצר", description, 
               e.stopPropagation();
               onHelpClick?.(e);
             }}
-            className="p-0.5 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors shrink-0"
+            /* הוספנו mr-4 כדי להזיז אותו שמאלה בערך 4 מ"מ */
+            className="p-1 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors shrink-0 mr-4"
             aria-label="עזרה"
           >
             <Info className="size-3.5" />
