@@ -49,10 +49,11 @@ export async function saveScan(
   imagePath: string | null
 ): Promise<void> {
   const deviceId = getDeviceId();
-  const { error } = await supabase.from("scans").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase.from("scans") as any).insert({
     device_id: deviceId,
-    ai_raw_data: aiRaw as unknown as Record<string, unknown>,
-    user_edited_data: userEdited as unknown as Record<string, unknown>,
+    ai_raw_data: aiRaw,
+    user_edited_data: userEdited,
     is_manually_edited: isManuallyEdited,
     image_path: imagePath,
   });
