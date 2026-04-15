@@ -15,7 +15,7 @@ export function ScanButton({ onClick, label = "סרוק מוצר", description }
       variant="scan"
       size="lg"
       onClick={onClick}
-      className="w-full max-w-xs min-h-[5rem] rounded-2xl animate-pulse-scan flex flex-col items-center justify-center gap-1 py-3"
+      className="w-full max-w-xs min-h-[5rem] rounded-2xl animate-slow-glow flex flex-col items-center justify-center gap-1 py-3"
     >
       <span className="flex items-center gap-2 text-base font-bold">
         {isComparison ? <BarChart3 className="!size-5" /> : <Camera className="!size-5" />}
