@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 1. הגדרת האנימציה בראש הקובץ */
+/* 1. הגדרת האנימציה - מחוץ לשכבות כדי להבטיח עדיפות */
 @keyframes slow-pulse {
   0%, 100% { 
     opacity: 1; 
@@ -16,12 +16,17 @@
   }
 }
 
-/* 2. החלת האנימציה בצורה אגרסיבית על הכפתור וכל מה שבתוכו */
-.animate-scan-glow, 
-.animate-scan-glow *, 
-.animate-scan-glow span, 
-.animate-scan-glow svg {
+/* 2. החלת האנימציה על הכפתור ועל כל מה שבתוכו (כולל האייקון החדש) */
+.animate-scan-glow {
   animation: slow-pulse 1.5s ease-in-out infinite !important;
+}
+
+/* מוודא שכל הילדים (טקסט, אייקונים, סימן i) יורשים את השקיפות והאנימציה */
+.animate-scan-glow *, 
+.animate-scan-glow svg, 
+.animate-scan-glow span {
+  animation: inherit !important;
+  opacity: inherit !important;
 }
 
 @layer base {
