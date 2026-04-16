@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Edit2, X, Package } from "lucide-react";
+import { Edit2, X, Package, Camera } from "lucide-react";
 import { ScanResult } from "@/types/scan";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ interface ProductCardProps {
   rank?: "best" | "worst" | "mid";
   onDelete?: (id: string) => void;
   onUpdatePrice?: (id: string, price: number) => void;
+  onScanPrice?: (id: string) => void;
 }
 
 const rankBorder: Record<string, string> = {
@@ -28,6 +29,7 @@ export function ProductCard({
   rank = "mid",
   onDelete,
   onUpdatePrice,
+  onScanPrice,
 }: ProductCardProps) {
   const [editing, setEditing] = useState(false);
   const [draftPrice, setDraftPrice] = useState("");
@@ -117,13 +119,24 @@ export function ProductCard({
                 </Button>
               </div>
             ) : (
-              <button
-                onClick={() => setEditing(true)}
-                className="flex items-center gap-1 text-sm text-primary font-medium justify-center"
-              >
-                <Edit2 className="size-3.5" />
-                עדכן מחיר
-              </button>
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="flex items-center gap-1 text-sm text-primary font-medium justify-center"
+                >
+                  <Edit2 className="size-3.5" />
+                  עדכן מחיר
+                </button>
+                {onScanPrice && (
+                  <button
+                    onClick={() => onScanPrice(result.id)}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    <Camera className="size-3" />
+                    סרוק תג
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
