@@ -102,8 +102,8 @@ export function ValidationScreen({
 
       {pricePerSheet !== null && (
         <div className="bg-primary/10 rounded-2xl p-5 text-center mt-2">
-          <p className="text-sm text-muted-foreground">מחיר לדף</p>
-          <p className="text-3xl font-bold text-primary mt-1">₪{pricePerSheet.toFixed(4)}</p>
+          <p className="text-sm text-muted-foreground">מחיר ליחידה</p>
+          <p className="text-3xl font-bold text-primary mt-1">₪{pricePerSheet.toFixed(2)}</p>
         </div>
       )}
 
