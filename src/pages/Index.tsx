@@ -37,6 +37,30 @@ export default function Index() {
     setHistory(getHistory());
   }, []);
 
+  // Rank items by pricePerSheet (cheapest = best). Computed at top level so
+  // hooks order stays stable across the conditional renders below.
+  const rankedHistory = useMemo(() => {
+    const withPrice = history.filter((h) => h.pricePerSheet != null);
+    if (withPrice.length === 0) {
+      return history.map((h) => ({ item: h, rank: "mid" as const }));
+    }
+    const sorted = [...history].sort((a, b) => {
+      if (a.pricePerSheet == null) return 1;
+      if (b.pricePerSheet == null) return -1;
+      return a.pricePerSheet - b.pricePerSheet;
+    });
+    const prices = withPrice.map((h) => h.pricePerSheet!);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return sorted.map((item) => {
+      if (item.pricePerSheet == null) return { item, rank: "mid" as const };
+      let rank: "best" | "worst" | "mid" = "mid";
+      if (item.pricePerSheet === min) rank = "best";
+      else if (item.pricePerSheet === max && max !== min) rank = "worst";
+      return { item, rank };
+    });
+  }, [history]);
+
   const refreshHistory = () => setHistory(getHistory());
 
   const handleScanStart = async (mode: "package" | "comparison") => {
