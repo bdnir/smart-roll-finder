@@ -10,7 +10,7 @@ export function ScanButton({ onClick, label = "סרוק מוצר" }: ScanButtonP
   return (
     <Button
       onClick={onClick}
-      className="w-full max-w-xs h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2 text-base font-bold shadow-lg"
+      className="w-full max-w-xs h-14 rounded-2xl bg-[hsl(217_91%_55%)] hover:bg-[hsl(217_91%_50%)] text-white flex items-center justify-center gap-2 text-base font-bold shadow-lg"
     >
       <Camera className="!size-5" />
       {label}

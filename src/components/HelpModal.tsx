@@ -20,7 +20,7 @@ export function HelpModal({ open, onOpenChange }: HelpModalProps) {
         <div className="space-y-4 text-sm text-foreground leading-relaxed text-right">
           <p>
             <strong>📸 מצלמים:</strong> מכוונים את המצלמה למוצר (חשוב שהמשקל/מס׳
-            יחידות יופיעו בבירור, גם המחיר אפשר). אפשר אח״כ לתקן ידנית.
+            יחידות יופיעו בבירור, גם המחיר). אפשר אח״כ לתקן ידנית.
           </p>
           <p>
             <strong>⚖️ משווים:</strong> המערכת תזהה את כל הווריאציות ותחשב עבורך
