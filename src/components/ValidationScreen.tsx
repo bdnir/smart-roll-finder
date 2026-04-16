@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { AIExtraction, ScanResult } from "@/types/scan";
 import { addToHistory } from "@/lib/storage";
 import { saveScan, uploadScanImage } from "@/lib/scan-service";
+import { playSuccessBeep } from "@/lib/audio";
 
 interface ValidationScreenProps {
   extraction: AIExtraction;
@@ -63,6 +64,7 @@ export function ValidationScreen({
 
     addToHistory(result);
     setSaving(false);
+    playSuccessBeep();
     onDone(result);
   };
 

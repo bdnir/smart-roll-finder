@@ -163,6 +163,41 @@ export default function Index() {
     );
   }
 
+  const hasItems = history.length > 0;
+
+  // Rank items by pricePerSheet (cheapest = best)
+  const rankedHistory = useMemo(() => {
+    const withPrice = history.filter((h) => h.pricePerSheet != null);
+    if (withPrice.length === 0) {
+      return history.map((h) => ({ item: h, rank: "mid" as const }));
+    }
+    const sorted = [...history].sort((a, b) => {
+      if (a.pricePerSheet == null) return 1;
+      if (b.pricePerSheet == null) return -1;
+      return a.pricePerSheet - b.pricePerSheet;
+    });
+    const prices = withPrice.map((h) => h.pricePerSheet!);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return sorted.map((item) => {
+      if (item.pricePerSheet == null) return { item, rank: "mid" as const };
+      let rank: "best" | "worst" | "mid" = "mid";
+      if (item.pricePerSheet === min) rank = "best";
+      else if (item.pricePerSheet === max && max !== min) rank = "worst";
+      return { item, rank };
+    });
+  }, [history]);
+
+  const handleDelete = (id: string) => {
+    removeFromHistory(id);
+    refreshHistory();
+  };
+
+  const handleUpdatePrice = (id: string, price: number) => {
+    updateHistoryItem(id, { price });
+    refreshHistory();
+  };
+
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
       <header className="p-5 pb-2">
@@ -177,20 +212,36 @@ export default function Index() {
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 gap-6">
-        <div className="relative w-full max-w-xs animate-scan-glow">
-          <ScanButton
-            onClick={() => handleScanStart("package")}
-            description="צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה"
-            onHelpClick={() => setHelpOpen(true)}
-          />
+      {/* Scan area – pinned to top when items exist, centered otherwise */}
+      <div
+        className={`flex flex-col items-center px-6 gap-3 transition-all duration-500 ease-out ${
+          hasItems ? "pt-2 pb-4" : "flex-1 justify-center py-8"
+        }`}
+      >
+        <div className="w-full max-w-xs animate-scan-glow">
+          <ScanButton onClick={() => handleScanStart("package")} />
+        </div>
+        {/* Static description with 'i' icon on the LEFT of text */}
+        <div className="flex items-center gap-2 max-w-xs w-full justify-center">
+          <button
+            onClick={() => setHelpOpen(true)}
+            aria-label="עזרה"
+            className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          >
+            <Info className="size-4" />
+          </button>
+          <p className="text-xs text-muted-foreground text-center">
+            צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה
+          </p>
         </div>
       </div>
 
-      {history.length > 0 && (
-        <div className="px-4 pb-6">
+      {hasItems && (
+        <div className="px-4 pb-6 flex-1">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-foreground">סריקות אחרונות</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              סריקות אחרונות
+            </h2>
             <Button
               variant="ghost"
               size="sm"
@@ -204,9 +255,15 @@ export default function Index() {
               נקה
             </Button>
           </div>
-          <div className="space-y-2">
-            {history.map((item) => (
-              <ProductCard key={item.id} result={item} />
+          <div className="space-y-3">
+            {rankedHistory.map(({ item, rank }) => (
+              <ProductCard
+                key={item.id}
+                result={item}
+                rank={rank}
+                onDelete={handleDelete}
+                onUpdatePrice={handleUpdatePrice}
+              />
             ))}
           </div>
         </div>
