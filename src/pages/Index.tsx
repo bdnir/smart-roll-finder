@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ShoppingCart, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { ShoppingCart, Trash2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScanButton } from "@/components/ScanButton";
 import { ProductCard } from "@/components/ProductCard";
@@ -9,7 +9,12 @@ import { ComparisonResults } from "@/components/ComparisonResults";
 import { HelpModal } from "@/components/HelpModal";
 import { analyzeImage } from "@/lib/ai";
 import { analyzeComparison } from "@/lib/comparison";
-import { getHistory, clearHistory } from "@/lib/storage";
+import {
+  getHistory,
+  clearHistory,
+  removeFromHistory,
+  updateHistoryItem,
+} from "@/lib/storage";
 import { checkQuota, QuotaExceededError } from "@/lib/scan-service";
 import { AIExtraction, ScanResult } from "@/types/scan";
 import { ComparisonResult } from "@/types/comparison";
