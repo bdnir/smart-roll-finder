@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { AIExtraction, ScanResult } from "@/types/scan";
 import { addToHistory } from "@/lib/storage";
 import { saveScan, uploadScanImage } from "@/lib/scan-service";
+import { playSuccessBeep } from "@/lib/audio";
 
 interface ValidationScreenProps {
   extraction: AIExtraction;
@@ -63,6 +64,7 @@ export function ValidationScreen({
 
     addToHistory(result);
     setSaving(false);
+    playSuccessBeep();
     onDone(result);
   };
 
@@ -100,8 +102,8 @@ export function ValidationScreen({
 
       {pricePerSheet !== null && (
         <div className="bg-primary/10 rounded-2xl p-5 text-center mt-2">
-          <p className="text-sm text-muted-foreground">מחיר לדף</p>
-          <p className="text-3xl font-bold text-primary mt-1">₪{pricePerSheet.toFixed(4)}</p>
+          <p className="text-sm text-muted-foreground">מחיר ליחידה</p>
+          <p className="text-3xl font-bold text-primary mt-1">₪{pricePerSheet.toFixed(2)}</p>
         </div>
       )}
 
