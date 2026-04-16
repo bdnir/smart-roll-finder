@@ -4,28 +4,26 @@ import { Button } from "@/components/ui/button";
 import { ScanButton } from "@/components/ScanButton";
 import { ProductCard } from "@/components/ProductCard";
 import { CameraCapture } from "@/components/CameraCapture";
-import { ValidationScreen } from "@/components/ValidationScreen";
-import { ComparisonResults } from "@/components/ComparisonResults";
 import { HelpModal } from "@/components/HelpModal";
 import { analyzeImage } from "@/lib/ai";
-import { analyzeComparison } from "@/lib/comparison";
 import {
   getHistory,
+  addToHistory,
   clearHistory,
   removeFromHistory,
   updateHistoryItem,
 } from "@/lib/storage";
-import { checkQuota, QuotaExceededError } from "@/lib/scan-service";
+import { checkQuota, saveScan, uploadScanImage, QuotaExceededError } from "@/lib/scan-service";
+import { playSuccessBeep } from "@/lib/audio";
 import { AIExtraction, ScanResult } from "@/types/scan";
-import { ComparisonResult } from "@/types/comparison";
 import { useToast } from "@/hooks/use-toast";
 
 type AppState =
   | { step: "home" }
-  | { step: "camera"; mode: "package" | "price" | "comparison"; pendingExtraction?: AIExtraction; pendingImage?: string }
-  | { step: "loading"; imageDataUrl: string; loadingMode: "single" | "comparison"; pendingExtraction?: AIExtraction }
-  | { step: "validation"; extraction: AIExtraction; imageDataUrl?: string }
-  | { step: "comparison-results"; result: ComparisonResult };
+  | { step: "camera"; mode: "package" | "price"; targetId?: string }
+  | { step: "loading"; loadingMode: "package" | "price" };
+
+const SCAN_FAIL_MSG = "הסריקה נכשלה, נסה שוב";
 
 export default function Index() {
   const [state, setState] = useState<AppState>({ step: "home" });
@@ -37,8 +35,6 @@ export default function Index() {
     setHistory(getHistory());
   }, []);
 
-  // Rank items by pricePerSheet (cheapest = best). Computed at top level so
-  // hooks order stays stable across the conditional renders below.
   const rankedHistory = useMemo(() => {
     const withPrice = history.filter((h) => h.pricePerSheet != null);
     if (withPrice.length === 0) {
@@ -63,7 +59,7 @@ export default function Index() {
 
   const refreshHistory = () => setHistory(getHistory());
 
-  const handleScanStart = async (mode: "package" | "comparison") => {
+  const handleScanStart = async () => {
     try {
       const allowed = await checkQuota();
       if (!allowed) {
@@ -74,69 +70,93 @@ export default function Index() {
         });
         return;
       }
-      setState({ step: "camera", mode });
     } catch {
-      setState({ step: "camera", mode });
+      // ignore quota check failure
     }
+    setState({ step: "camera", mode: "package" });
+  };
+
+  const computePricePerSheet = (
+    price: number | null,
+    rolls: number | null,
+    sheets: number | null
+  ): number | null => {
+    if (!price) return null;
+    if (rolls && sheets) return price / (rolls * sheets);
+    if (rolls) return price / rolls;
+    return null;
   };
 
   const handleCapture = async (imageBase64: string) => {
-    if (state.step === "camera" && state.mode === "comparison") {
-      setState({ step: "loading", imageDataUrl: imageBase64, loadingMode: "comparison" });
+    // Price-only scan to update an existing item
+    if (state.step === "camera" && state.mode === "price" && state.targetId) {
+      const targetId = state.targetId;
+      setState({ step: "loading", loadingMode: "price" });
       try {
-        const result = await analyzeComparison(imageBase64);
-        setState({ step: "comparison-results", result });
+        const extraction = await analyzeImage(imageBase64);
+        if (extraction.price != null) {
+          updateHistoryItem(targetId, { price: extraction.price });
+          refreshHistory();
+          playSuccessBeep();
+          toast({ title: "המחיר עודכן" });
+        } else {
+          toast({ title: "שגיאה", description: SCAN_FAIL_MSG, variant: "destructive" });
+        }
       } catch (e) {
-        const msg = e instanceof QuotaExceededError
-          ? e.message
-          : e instanceof Error ? e.message : "שגיאה לא ידועה";
+        const msg = e instanceof QuotaExceededError ? e.message : SCAN_FAIL_MSG;
         toast({ title: "שגיאה", description: msg, variant: "destructive" });
-        setState({ step: "home" });
       }
+      setState({ step: "home" });
       return;
     }
 
-    if (state.step === "camera" && state.mode === "price" && state.pendingExtraction) {
-      setState({ step: "loading", imageDataUrl: imageBase64, loadingMode: "single", pendingExtraction: state.pendingExtraction });
-      try {
-        const priceResult = await analyzeImage(imageBase64);
-        setState({
-          step: "validation",
-          extraction: { ...state.pendingExtraction, price: priceResult.price ?? state.pendingExtraction.price },
-          imageDataUrl: state.pendingImage,
-        });
-      } catch {
-        toast({ title: "שגיאה", description: "לא ניתן לנתח את תג המחיר", variant: "destructive" });
-        setState({
-          step: "validation",
-          extraction: state.pendingExtraction,
-          imageDataUrl: state.pendingImage,
-        });
-      }
-      return;
-    }
-
-    setState({ step: "loading", imageDataUrl: imageBase64, loadingMode: "single" });
+    // Standard package scan – direct injection
+    setState({ step: "loading", loadingMode: "package" });
     try {
-      const extraction = await analyzeImage(imageBase64);
-      setState({ step: "validation", extraction, imageDataUrl: imageBase64 });
+      const extraction: AIExtraction = await analyzeImage(imageBase64);
+
+      // Validate: must have name AND units (rolls)
+      const hasName = !!(extraction.productName || extraction.companyName);
+      const hasUnits = !!extraction.rolls;
+      if (!hasName || !hasUnits) {
+        toast({ title: "שגיאה", description: SCAN_FAIL_MSG, variant: "destructive" });
+        setState({ step: "home" });
+        return;
+      }
+
+      const pricePerSheet = computePricePerSheet(
+        extraction.price,
+        extraction.rolls,
+        extraction.sheetsPerRoll
+      );
+
+      const result: ScanResult = {
+        id: crypto.randomUUID(),
+        companyName: extraction.companyName,
+        productName: extraction.productName,
+        price: extraction.price,
+        rolls: extraction.rolls,
+        sheetsPerRoll: extraction.sheetsPerRoll,
+        pricePerSheet,
+        timestamp: Date.now(),
+        imageDataUrl: imageBase64,
+      };
+
+      addToHistory(result);
+      refreshHistory();
+      playSuccessBeep();
+      setState({ step: "home" });
+
+      // Background: upload + save
+      (async () => {
+        const imagePath = await uploadScanImage(imageBase64);
+        await saveScan(extraction, result, false, imagePath);
+      })();
     } catch (e) {
-      const isBlurry = e instanceof Error && e.message.toLowerCase().includes("blur");
-      toast({
-        title: "שגיאה",
-        description: isBlurry
-          ? "התמונה לא ברורה, נסה לצלם מקרוב יותר ובתאורה טובה"
-          : e instanceof Error ? e.message : "שגיאה לא ידועה",
-        variant: "destructive",
-      });
+      const msg = e instanceof QuotaExceededError ? e.message : SCAN_FAIL_MSG;
+      toast({ title: "שגיאה", description: msg, variant: "destructive" });
       setState({ step: "home" });
     }
-  };
-
-  const handleDone = (_result: ScanResult) => {
-    refreshHistory();
-    setState({ step: "home" });
-    toast({ title: "נשמר!", description: "התוצאה נשמרה בהצלחה" });
   };
 
   if (state.step === "camera") {
@@ -153,42 +173,13 @@ export default function Index() {
       <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center gap-4">
         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         <p className="text-muted-foreground font-medium">
-          {state.loadingMode === "comparison" ? "מנתח ומשווה מוצרים..." : "מנתח את התמונה..."}
+          {state.loadingMode === "price" ? "מנתח את תג המחיר..." : "מנתח את התמונה..."}
         </p>
       </div>
     );
   }
 
-  if (state.step === "validation") {
-    return (
-      <ValidationScreen
-        extraction={state.extraction}
-        imageDataUrl={state.imageDataUrl}
-        onDone={handleDone}
-        onScanPrice={() =>
-          setState({
-            step: "camera",
-            mode: "price",
-            pendingExtraction: state.extraction,
-            pendingImage: state.imageDataUrl,
-          })
-        }
-        onCancel={() => setState({ step: "home" })}
-      />
-    );
-  }
-
-  if (state.step === "comparison-results") {
-    return (
-      <ComparisonResults
-        result={state.result}
-        onClose={() => setState({ step: "home" })}
-      />
-    );
-  }
-
   const hasItems = history.length > 0;
-
 
   const handleDelete = (id: string) => {
     removeFromHistory(id);
@@ -198,6 +189,10 @@ export default function Index() {
   const handleUpdatePrice = (id: string, price: number) => {
     updateHistoryItem(id, { price });
     refreshHistory();
+  };
+
+  const handleScanPriceFor = (id: string) => {
+    setState({ step: "camera", mode: "price", targetId: id });
   };
 
   return (
@@ -214,16 +209,14 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Scan area – pinned to top when items exist, centered otherwise */}
       <div
         className={`flex flex-col items-center px-6 gap-3 transition-all duration-500 ease-out ${
           hasItems ? "pt-2 pb-4" : "flex-1 justify-center py-8"
         }`}
       >
         <div className="w-full max-w-xs animate-scan-glow">
-          <ScanButton onClick={() => handleScanStart("package")} />
+          <ScanButton onClick={handleScanStart} />
         </div>
-        {/* Static description with 'i' icon on the LEFT of text */}
         <div className="flex items-center gap-2 max-w-xs w-full justify-center">
           <button
             onClick={() => setHelpOpen(true)}
@@ -241,9 +234,7 @@ export default function Index() {
       {hasItems && (
         <div className="px-4 pb-6 flex-1">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-foreground">
-              סריקות אחרונות
-            </h2>
+            <h2 className="text-sm font-semibold text-foreground">סריקות אחרונות</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -265,6 +256,7 @@ export default function Index() {
                 rank={rank}
                 onDelete={handleDelete}
                 onUpdatePrice={handleUpdatePrice}
+                onScanPrice={handleScanPriceFor}
               />
             ))}
           </div>
