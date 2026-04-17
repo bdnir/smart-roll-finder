@@ -20,7 +20,6 @@ serve(async (req) => {
       });
     }
 
-    // Check quota if device_id provided
     if (device_id) {
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
       const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -76,18 +75,23 @@ serve(async (req) => {
                 },
                 {
                   type: "text",
-                  text: `Analyze this image of a product package and/or price tag. Extract:
-1. Price (number in ILS/shekels) 
-2. Total number of rolls/units (number)
-3. Sheets/items per roll/unit (number)
-4. Company/brand name (string)
-5. Product name (string)
+                  text: `Analyze this product package image. Extract these GENERIC fields for ANY product type (toilet paper, tuna, diapers, wipes, beverages, snacks, etc.):
 
-IMPORTANT: If the image is blurry, out of focus, or too dark to read, return {"error": "BLURRY_IMAGE"} instead.
+1. price: total price in ILS (number)
+2. unitCount: total quantity for unit-price calculation. Use the most meaningful unit:
+   - Toilet paper: total rolls
+   - Tuna/canned food: drained weight in grams (משקל מסונן)
+   - Diapers/wipes: total count of items
+   - Beverages: total ml or liters
+   - Snacks/dry goods: total weight in g
+3. unitType: one of: "rolls", "units", "g", "kg", "ml", "l", "pack"
+4. companyName: brand
+5. productName: product name
 
-If any value is not visible or cannot be determined, return null for that field.
-Return ONLY valid JSON in this exact format:
-{"price": number|null, "rolls": number|null, "sheetsPerRoll": number|null, "companyName": string|null, "productName": string|null}`,
+If the package shows a promo like "3 ב-20", set price=20 and unitCount = single_unit_count * 3.
+
+IMPORTANT: If the image is too blurry/dark to read, return {"error": "BLURRY_IMAGE"}.
+If a value isn't visible, return null for it. Return raw numbers (no thousands separators).`,
                 },
               ],
             },
@@ -97,18 +101,22 @@ Return ONLY valid JSON in this exact format:
               type: "function",
               function: {
                 name: "extract_package_data",
-                description: "Extract product package data from image",
+                description: "Extract generic product package data from image",
                 parameters: {
                   type: "object",
                   properties: {
-                    price: { type: ["number", "null"], description: "Price in ILS" },
-                    rolls: { type: ["number", "null"], description: "Total number of rolls/units" },
-                    sheetsPerRoll: { type: ["number", "null"], description: "Sheets/items per roll/unit" },
+                    price: { type: ["number", "null"], description: "Total price in ILS" },
+                    unitCount: { type: ["number", "null"], description: "Total quantity in unitType" },
+                    unitType: {
+                      type: ["string", "null"],
+                      enum: ["rolls", "units", "g", "kg", "ml", "l", "pack", null],
+                      description: "Unit of measurement",
+                    },
                     companyName: { type: ["string", "null"], description: "Brand/company name" },
                     productName: { type: ["string", "null"], description: "Product name" },
-                    error: { type: ["string", "null"], description: "Error code if image is unreadable, e.g. BLURRY_IMAGE" },
+                    error: { type: ["string", "null"], description: "Error code, e.g. BLURRY_IMAGE" },
                   },
-                  required: ["price", "rolls", "sheetsPerRoll", "companyName", "productName"],
+                  required: ["price", "unitCount", "unitType", "companyName", "productName"],
                 },
               },
             },
@@ -139,20 +147,17 @@ Return ONLY valid JSON in this exact format:
     const result = await response.json();
     const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
 
-    let extracted;
+    let extracted: Record<string, unknown>;
     if (toolCall?.function?.arguments) {
       extracted = JSON.parse(toolCall.function.arguments);
     } else {
       const content = result.choices?.[0]?.message?.content || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        extracted = JSON.parse(jsonMatch[0]);
-      } else {
-        extracted = { price: null, rolls: null, sheetsPerRoll: null, companyName: null, productName: null };
-      }
+      extracted = jsonMatch
+        ? JSON.parse(jsonMatch[0])
+        : { price: null, unitCount: null, unitType: null, companyName: null, productName: null };
     }
 
-    // Check for blurry image
     if (extracted.error === "BLURRY_IMAGE") {
       return new Response(
         JSON.stringify({ error: "התמונה לא ברורה, נסה לצלם מקרוב יותר ובתאורה טובה", code: "BLURRY_IMAGE" }),
@@ -160,8 +165,17 @@ Return ONLY valid JSON in this exact format:
       );
     }
 
-    // Remove error field if present
     delete extracted.error;
+
+    // Normalize: convert kg→g and l→ml for consistent per-unit comparisons
+    if (extracted.unitType === "kg" && typeof extracted.unitCount === "number") {
+      extracted.unitCount = extracted.unitCount * 1000;
+      extracted.unitType = "g";
+    }
+    if (extracted.unitType === "l" && typeof extracted.unitCount === "number") {
+      extracted.unitCount = extracted.unitCount * 1000;
+      extracted.unitType = "ml";
+    }
 
     return new Response(JSON.stringify(extracted), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
