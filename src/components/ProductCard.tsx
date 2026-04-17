@@ -62,7 +62,20 @@ export function ProductCard({
     setDraftPrice("");
   };
 
-  const unitLabel = "ליחידה";
+  const unitTypeLabels: Record<string, string> = {
+    rolls: "לגליל",
+    units: "ליחידה",
+    g: "ל-100 גרם",
+    ml: "ל-100 מ״ל",
+    pack: "לחבילה",
+  };
+  const unitType = result.unitType || "units";
+  const unitLabel = unitTypeLabels[unitType] || "ליחידה";
+  // For weight/volume, display per 100 (g/ml)
+  const displayPrice =
+    result.pricePerUnit != null && (unitType === "g" || unitType === "ml")
+      ? result.pricePerUnit * 100
+      : result.pricePerUnit;
 
   return (
     <div className="relative">
@@ -80,9 +93,9 @@ export function ProductCard({
               {result.companyName || "מוצר"}
               {result.productName ? `, ${result.productName}` : ""}
             </p>
-            {result.rolls && result.sheetsPerRoll ? (
+            {result.unitCount ? (
               <p className="text-xs text-muted-foreground mt-1">
-                {result.rolls} יחידות
+                {result.unitCount} {unitType === "rolls" ? "גלילים" : unitType === "g" ? "גרם" : unitType === "ml" ? "מ״ל" : "יחידות"}
               </p>
             ) : null}
           </div>
@@ -92,10 +105,10 @@ export function ProductCard({
 
           {/* Middle: price */}
           <div className="flex flex-col justify-center min-w-[110px] text-center">
-            {result.pricePerSheet !== null ? (
+            {displayPrice != null ? (
               <>
                 <p className={`text-base font-bold ${rankPriceColor[rank]}`}>
-                  ₪{result.pricePerSheet.toFixed(2)} {unitLabel}
+                  ₪{displayPrice.toFixed(2)} {unitLabel}
                 </p>
                 {result.price != null && (
                   <p className="text-[11px] text-muted-foreground mt-0.5">

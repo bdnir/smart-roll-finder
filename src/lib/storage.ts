@@ -26,15 +26,19 @@ export function removeFromHistory(id: string): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
 
+export function computePricePerUnit(
+  price: number | null,
+  unitCount: number | null
+): number | null {
+  if (!price || !unitCount || unitCount <= 0) return null;
+  return price / unitCount;
+}
+
 export function updateHistoryItem(id: string, patch: Partial<ScanResult>): void {
   const history = getHistory().map((r) => {
     if (r.id !== id) return r;
     const merged = { ...r, ...patch };
-    if (merged.price && merged.rolls && merged.sheetsPerRoll) {
-      merged.pricePerSheet = merged.price / (merged.rolls * merged.sheetsPerRoll);
-    } else if (merged.price && merged.rolls && !merged.sheetsPerRoll) {
-      merged.pricePerSheet = merged.price / merged.rolls;
-    }
+    merged.pricePerUnit = computePricePerUnit(merged.price, merged.unitCount);
     return merged;
   });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
