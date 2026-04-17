@@ -36,23 +36,23 @@ export default function Index() {
   }, []);
 
   const rankedHistory = useMemo(() => {
-    const withPrice = history.filter((h) => h.pricePerSheet != null);
+    const withPrice = history.filter((h) => h.pricePerUnit != null);
     if (withPrice.length === 0) {
       return history.map((h) => ({ item: h, rank: "mid" as const }));
     }
     const sorted = [...history].sort((a, b) => {
-      if (a.pricePerSheet == null) return 1;
-      if (b.pricePerSheet == null) return -1;
-      return a.pricePerSheet - b.pricePerSheet;
+      if (a.pricePerUnit == null) return 1;
+      if (b.pricePerUnit == null) return -1;
+      return a.pricePerUnit - b.pricePerUnit;
     });
-    const prices = withPrice.map((h) => h.pricePerSheet!);
+    const prices = withPrice.map((h) => h.pricePerUnit!);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
     return sorted.map((item) => {
-      if (item.pricePerSheet == null) return { item, rank: "mid" as const };
+      if (item.pricePerUnit == null) return { item, rank: "mid" as const };
       let rank: "best" | "worst" | "mid" = "mid";
-      if (item.pricePerSheet === min) rank = "best";
-      else if (item.pricePerSheet === max && max !== min) rank = "worst";
+      if (item.pricePerUnit === min) rank = "best";
+      else if (item.pricePerUnit === max && max !== min) rank = "worst";
       return { item, rank };
     });
   }, [history]);
@@ -76,16 +76,7 @@ export default function Index() {
     setState({ step: "camera", mode: "package" });
   };
 
-  const computePricePerSheet = (
-    price: number | null,
-    rolls: number | null,
-    sheets: number | null
-  ): number | null => {
-    if (!price) return null;
-    if (rolls && sheets) return price / (rolls * sheets);
-    if (rolls) return price / rolls;
-    return null;
-  };
+  // pricePerUnit comes from storage helper (computePricePerUnit)
 
   const handleCapture = async (imageBase64: string) => {
     // Price-only scan to update an existing item
@@ -115,29 +106,28 @@ export default function Index() {
     try {
       const extraction: AIExtraction = await analyzeImage(imageBase64);
 
-      // Validate: must have name AND units (rolls)
+      // Validate: must have name AND unitCount (works for any product)
       const hasName = !!(extraction.productName || extraction.companyName);
-      const hasUnits = !!extraction.rolls;
+      const hasUnits = !!extraction.unitCount;
       if (!hasName || !hasUnits) {
         toast({ title: "שגיאה", description: SCAN_FAIL_MSG, variant: "destructive" });
         setState({ step: "home" });
         return;
       }
 
-      const pricePerSheet = computePricePerSheet(
-        extraction.price,
-        extraction.rolls,
-        extraction.sheetsPerRoll
-      );
+      const pricePerUnit =
+        extraction.price && extraction.unitCount
+          ? extraction.price / extraction.unitCount
+          : null;
 
       const result: ScanResult = {
         id: crypto.randomUUID(),
         companyName: extraction.companyName,
         productName: extraction.productName,
         price: extraction.price,
-        rolls: extraction.rolls,
-        sheetsPerRoll: extraction.sheetsPerRoll,
-        pricePerSheet,
+        unitCount: extraction.unitCount,
+        unitType: extraction.unitType,
+        pricePerUnit,
         timestamp: Date.now(),
         imageDataUrl: imageBase64,
       };
