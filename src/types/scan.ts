@@ -6,6 +6,7 @@ export interface AIExtraction {
   unitType: UnitType | string | null;
   companyName: string | null;
   productName: string | null;
+  sheetsPerRoll?: number | null;
 }
 
 export interface ScanResult {
@@ -15,6 +16,7 @@ export interface ScanResult {
   price: number | null;
   unitCount: number | null;
   unitType: UnitType | string | null;
+  sheetsPerRoll?: number | null;
   pricePerUnit: number | null;
   timestamp: number;
   imageDataUrl?: string;

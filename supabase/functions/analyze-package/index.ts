@@ -87,6 +87,7 @@ serve(async (req) => {
 3. unitType: one of: "rolls", "units", "g", "kg", "ml", "l", "pack"
 4. companyName: brand
 5. productName: product name
+6. sheetsPerRoll: ONLY for toilet paper / paper towels. Number of sheets (דפים/פסים/מלבנים) per single roll. Null for non-paper products.
 
 If the package shows a promo like "3 ב-20", set price=20 and unitCount = single_unit_count * 3.
 
@@ -114,6 +115,7 @@ If a value isn't visible, return null for it. Return raw numbers (no thousands s
                     },
                     companyName: { type: ["string", "null"], description: "Brand/company name" },
                     productName: { type: ["string", "null"], description: "Product name" },
+                    sheetsPerRoll: { type: ["number", "null"], description: "Sheets per roll (toilet paper / paper towels only)" },
                     error: { type: ["string", "null"], description: "Error code, e.g. BLURRY_IMAGE" },
                   },
                   required: ["price", "unitCount", "unitType", "companyName", "productName"],

@@ -128,6 +128,7 @@ export default function Index() {
         price: extraction.price,
         unitCount: extraction.unitCount,
         unitType: extraction.unitType,
+        sheetsPerRoll: extraction.sheetsPerRoll ?? null,
         pricePerUnit,
         timestamp: Date.now(),
         imageDataUrl: imageBase64,

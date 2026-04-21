@@ -84,19 +84,29 @@ export function ProductCard({
 
   const unitTypeLabels: Record<string, string> = {
     rolls: "לגליל",
+    sheets: "לדף",
     units: "ליחידה",
     g: "ל-100 גרם",
     ml: "ל-100 מ״ל",
     pack: "לחבילה",
   };
   const unitType = result.unitType || "units";
-  const unitLabel = unitTypeLabels[unitType] || "ליחידה";
+  const isToiletPaper = unitType === "rolls" && !!result.sheetsPerRoll;
+  const effectiveUnitType = isToiletPaper ? "sheets" : unitType;
+  const unitLabel = unitTypeLabels[effectiveUnitType] || "ליחידה";
+  const basePerUnit = result.pricePerUnit;
+  const perSheet =
+    isToiletPaper && basePerUnit != null && result.sheetsPerRoll
+      ? basePerUnit / result.sheetsPerRoll
+      : null;
   const displayPrice =
-    result.pricePerUnit != null && (unitType === "g" || unitType === "ml")
-      ? result.pricePerUnit * 100
-      : result.pricePerUnit;
+    perSheet != null
+      ? perSheet
+      : basePerUnit != null && (unitType === "g" || unitType === "ml")
+      ? basePerUnit * 100
+      : basePerUnit;
 
-  const blinkClass = shouldBlink ? "animate-pulse" : "";
+  const blinkClass = shouldBlink ? "animate-pulse font-bold" : "";
 
   return (
     <div className="relative">
@@ -144,7 +154,7 @@ export function ProductCard({
             ) : displayPrice != null ? (
               <>
                 <p className={`text-base font-bold ${rankPriceColor[rank]}`}>
-                  ₪{displayPrice.toFixed(2)} {unitLabel}
+                  ₪{displayPrice.toFixed(perSheet != null ? 3 : 2)} {unitLabel}
                 </p>
                 {result.price != null && (
                   <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -153,7 +163,7 @@ export function ProductCard({
                 )}
                 <button
                   onClick={startEditing}
-                  className={`flex items-center gap-1 text-[11px] text-primary font-medium justify-center mt-1 ${blinkClass}`}
+                  className={`flex items-center gap-1 text-[11px] text-primary justify-center mt-1 ${shouldBlink ? "animate-pulse font-bold" : "font-medium"}`}
                 >
                   <Edit2 className="size-3" />
                   עדכן מחיר כולל
