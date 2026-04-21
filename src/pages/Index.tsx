@@ -29,6 +29,7 @@ export default function Index() {
   const [state, setState] = useState<AppState>({ step: "home" });
   const [history, setHistory] = useState<ScanResult[]>([]);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [lastScannedId, setLastScannedId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
