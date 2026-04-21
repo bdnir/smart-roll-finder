@@ -250,6 +250,7 @@ export default function Index() {
                 onDelete={handleDelete}
                 onUpdatePrice={handleUpdatePrice}
                 onScanPrice={handleScanPriceFor}
+                highlightPrice={item.id === lastScannedId}
               />
             ))}
           </div>
