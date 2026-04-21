@@ -135,6 +135,7 @@ export default function Index() {
 
       addToHistory(result);
       refreshHistory();
+      setLastScannedId(result.id);
       playSuccessBeep();
       setState({ step: "home" });
 
