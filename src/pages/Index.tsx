@@ -244,7 +244,7 @@ export default function Index() {
               className="text-xs text-muted-foreground"
             >
               <Trash2 className="size-3" />
-              נקה
+              נקה הכל
             </Button>
           </div>
           <div className="space-y-3">
