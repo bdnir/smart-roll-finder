@@ -181,6 +181,7 @@ export default function Index() {
   const handleUpdatePrice = (id: string, price: number) => {
     updateHistoryItem(id, { price });
     refreshHistory();
+    if (id === lastScannedId) setLastScannedId(null);
   };
 
   const handleScanPriceFor = (id: string) => {
