@@ -154,7 +154,7 @@ export function ProductCard({
             ) : displayPrice != null ? (
               <>
                 <p className={`text-base font-bold ${rankPriceColor[rank]}`}>
-                  ₪{displayPrice.toFixed(2)} {unitLabel}
+                  ₪{displayPrice.toFixed(perSheet != null ? 3 : 2)} {unitLabel}
                 </p>
                 {result.price != null && (
                   <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -163,7 +163,7 @@ export function ProductCard({
                 )}
                 <button
                   onClick={startEditing}
-                  className={`flex items-center gap-1 text-[11px] text-primary font-medium justify-center mt-1 ${blinkClass}`}
+                  className={`flex items-center gap-1 text-[11px] text-primary justify-center mt-1 ${shouldBlink ? "animate-pulse font-bold" : "font-medium"}`}
                 >
                   <Edit2 className="size-3" />
                   עדכן מחיר כולל
