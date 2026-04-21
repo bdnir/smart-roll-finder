@@ -5,6 +5,7 @@ import { ScanButton } from "@/components/ScanButton";
 import { ProductCard } from "@/components/ProductCard";
 import { CameraCapture } from "@/components/CameraCapture";
 import { HelpModal } from "@/components/HelpModal";
+import { InstallPromptModal, recordScanForInstallPrompt } from "@/components/InstallPromptModal";
 import { analyzeImage } from "@/lib/ai";
 import {
   getHistory,
@@ -29,6 +30,7 @@ export default function Index() {
   const [state, setState] = useState<AppState>({ step: "home" });
   const [history, setHistory] = useState<ScanResult[]>([]);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
   const [lastScannedId, setLastScannedId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -139,6 +141,9 @@ export default function Index() {
       setLastScannedId(result.id);
       playSuccessBeep();
       setState({ step: "home" });
+      if (recordScanForInstallPrompt() === "show") {
+        setTimeout(() => setInstallOpen(true), 600);
+      }
 
       // Background: upload + save
       (async () => {
@@ -259,6 +264,7 @@ export default function Index() {
       )}
 
       <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
+      <InstallPromptModal open={installOpen} onOpenChange={setInstallOpen} />
     </div>
   );
 }
