@@ -115,6 +115,7 @@ If a value isn't visible, return null for it. Return raw numbers (no thousands s
                     },
                     companyName: { type: ["string", "null"], description: "Brand/company name" },
                     productName: { type: ["string", "null"], description: "Product name" },
+                    sheetsPerRoll: { type: ["number", "null"], description: "Sheets per roll (toilet paper / paper towels only)" },
                     error: { type: ["string", "null"], description: "Error code, e.g. BLURRY_IMAGE" },
                   },
                   required: ["price", "unitCount", "unitType", "companyName", "productName"],
