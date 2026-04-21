@@ -87,6 +87,7 @@ serve(async (req) => {
 3. unitType: one of: "rolls", "units", "g", "kg", "ml", "l", "pack"
 4. companyName: brand
 5. productName: product name
+6. sheetsPerRoll: ONLY for toilet paper / paper towels. Number of sheets (דפים/פסים/מלבנים) per single roll. Null for non-paper products.
 
 If the package shows a promo like "3 ב-20", set price=20 and unitCount = single_unit_count * 3.
 
