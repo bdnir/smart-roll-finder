@@ -29,6 +29,7 @@ export default function Index() {
   const [state, setState] = useState<AppState>({ step: "home" });
   const [history, setHistory] = useState<ScanResult[]>([]);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [lastScannedId, setLastScannedId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -134,6 +135,7 @@ export default function Index() {
 
       addToHistory(result);
       refreshHistory();
+      setLastScannedId(result.id);
       playSuccessBeep();
       setState({ step: "home" });
 
@@ -179,6 +181,7 @@ export default function Index() {
   const handleUpdatePrice = (id: string, price: number) => {
     updateHistoryItem(id, { price });
     refreshHistory();
+    if (id === lastScannedId) setLastScannedId(null);
   };
 
   const handleScanPriceFor = (id: string) => {
@@ -247,6 +250,7 @@ export default function Index() {
                 onDelete={handleDelete}
                 onUpdatePrice={handleUpdatePrice}
                 onScanPrice={handleScanPriceFor}
+                highlightPrice={item.id === lastScannedId}
               />
             ))}
           </div>

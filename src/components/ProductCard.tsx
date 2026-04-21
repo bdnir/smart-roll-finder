@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Edit2, X, Package, Camera } from "lucide-react";
 import { ScanResult } from "@/types/scan";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ interface ProductCardProps {
   onDelete?: (id: string) => void;
   onUpdatePrice?: (id: string, price: number) => void;
   onScanPrice?: (id: string) => void;
+  highlightPrice?: boolean;
 }
 
 const rankBorder: Record<string, string> = {
@@ -30,11 +31,20 @@ export function ProductCard({
   onDelete,
   onUpdatePrice,
   onScanPrice,
+  highlightPrice = false,
 }: ProductCardProps) {
   const [editing, setEditing] = useState(false);
   const [draftPrice, setDraftPrice] = useState("");
+  const [hasEditedPrice, setHasEditedPrice] = useState(false);
   const startX = useRef<number | null>(null);
   const [offset, setOffset] = useState(0);
+
+  // Reset edited flag when a new scan (different id) becomes highlighted
+  useEffect(() => {
+    setHasEditedPrice(false);
+  }, [result.id]);
+
+  const shouldBlink = highlightPrice && !hasEditedPrice;
 
   const onTouchStart = (e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
@@ -42,7 +52,6 @@ export function ProductCard({
   const onTouchMove = (e: React.TouchEvent) => {
     if (startX.current == null) return;
     const dx = e.touches[0].clientX - startX.current;
-    // RTL: swipe right = delete (positive dx)
     if (dx > 0) setOffset(Math.min(dx, 120));
   };
   const onTouchEnd = () => {
@@ -53,13 +62,24 @@ export function ProductCard({
     startX.current = null;
   };
 
+  const startEditing = () => {
+    setDraftPrice(result.price != null ? String(result.price) : "");
+    setEditing(true);
+  };
+
   const submitPrice = () => {
     const n = parseFloat(draftPrice);
     if (!isNaN(n) && n > 0 && onUpdatePrice) {
       onUpdatePrice(result.id, n);
+      setHasEditedPrice(true);
     }
     setEditing(false);
     setDraftPrice("");
+  };
+
+  const handleScanPrice = () => {
+    setHasEditedPrice(true);
+    onScanPrice?.(result.id);
   };
 
   const unitTypeLabels: Record<string, string> = {
@@ -71,11 +91,12 @@ export function ProductCard({
   };
   const unitType = result.unitType || "units";
   const unitLabel = unitTypeLabels[unitType] || "ליחידה";
-  // For weight/volume, display per 100 (g/ml)
   const displayPrice =
     result.pricePerUnit != null && (unitType === "g" || unitType === "ml")
       ? result.pricePerUnit * 100
       : result.pricePerUnit;
+
+  const blinkClass = shouldBlink ? "animate-pulse" : "";
 
   return (
     <div className="relative">
@@ -105,18 +126,7 @@ export function ProductCard({
 
           {/* Middle: price */}
           <div className="flex flex-col justify-center min-w-[110px] text-center">
-            {displayPrice != null ? (
-              <>
-                <p className={`text-base font-bold ${rankPriceColor[rank]}`}>
-                  ₪{displayPrice.toFixed(2)} {unitLabel}
-                </p>
-                {result.price != null && (
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    מחיר כולל {result.price.toFixed(2)} ש"ח
-                  </p>
-                )}
-              </>
-            ) : editing ? (
+            {editing ? (
               <div className="flex items-center gap-1">
                 <Input
                   type="number"
@@ -131,22 +141,40 @@ export function ProductCard({
                   ✓
                 </Button>
               </div>
+            ) : displayPrice != null ? (
+              <>
+                <p className={`text-base font-bold ${rankPriceColor[rank]}`}>
+                  ₪{displayPrice.toFixed(2)} {unitLabel}
+                </p>
+                {result.price != null && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    מחיר כולל {result.price.toFixed(2)} ש"ח
+                  </p>
+                )}
+                <button
+                  onClick={startEditing}
+                  className={`flex items-center gap-1 text-[11px] text-primary font-medium justify-center mt-1 ${blinkClass}`}
+                >
+                  <Edit2 className="size-3" />
+                  עדכן מחיר כולל
+                </button>
+              </>
             ) : (
               <div className="flex flex-col items-center gap-1">
                 <button
-                  onClick={() => setEditing(true)}
-                  className="flex items-center gap-1 text-sm text-primary font-medium justify-center"
+                  onClick={startEditing}
+                  className={`flex items-center gap-1 text-sm text-primary font-medium justify-center ${blinkClass}`}
                 >
                   <Edit2 className="size-3.5" />
-                  עדכן מחיר
+                  עדכן מחיר כולל
                 </button>
                 {onScanPrice && (
                   <button
-                    onClick={() => onScanPrice(result.id)}
-                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                    onClick={handleScanPrice}
+                    className={`flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground ${blinkClass}`}
                   >
                     <Camera className="size-3" />
-                    סרוק תג
+                    סרוק תג מחיר
                   </button>
                 )}
               </div>
