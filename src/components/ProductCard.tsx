@@ -84,19 +84,29 @@ export function ProductCard({
 
   const unitTypeLabels: Record<string, string> = {
     rolls: "לגליל",
+    sheets: "לדף",
     units: "ליחידה",
     g: "ל-100 גרם",
     ml: "ל-100 מ״ל",
     pack: "לחבילה",
   };
   const unitType = result.unitType || "units";
-  const unitLabel = unitTypeLabels[unitType] || "ליחידה";
+  const isToiletPaper = unitType === "rolls" && !!result.sheetsPerRoll;
+  const effectiveUnitType = isToiletPaper ? "sheets" : unitType;
+  const unitLabel = unitTypeLabels[effectiveUnitType] || "ליחידה";
+  const basePerUnit = result.pricePerUnit;
+  const perSheet =
+    isToiletPaper && basePerUnit != null && result.sheetsPerRoll
+      ? basePerUnit / result.sheetsPerRoll
+      : null;
   const displayPrice =
-    result.pricePerUnit != null && (unitType === "g" || unitType === "ml")
-      ? result.pricePerUnit * 100
-      : result.pricePerUnit;
+    perSheet != null
+      ? perSheet
+      : basePerUnit != null && (unitType === "g" || unitType === "ml")
+      ? basePerUnit * 100
+      : basePerUnit;
 
-  const blinkClass = shouldBlink ? "animate-pulse" : "";
+  const blinkClass = shouldBlink ? "animate-pulse font-bold" : "";
 
   return (
     <div className="relative">
