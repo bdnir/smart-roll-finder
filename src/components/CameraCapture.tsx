@@ -95,7 +95,7 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
         </p>
       </div>
 
-      <div className="bg-background p-6 flex items-center justify-between" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="glass-strong p-6 flex items-center justify-between" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
         <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
           <X className="!size-6" />
         </Button>
@@ -103,9 +103,9 @@ export function CameraCapture({ onCapture, onClose }: CameraCaptureProps) {
           variant="scan"
           size="icon"
           onClick={handleCapture}
-          className="!w-16 !h-16 rounded-full"
+          className="!w-20 !h-20 rounded-full shadow-glow active:scale-95 transition-transform"
         >
-          <Camera className="!size-7" />
+          <Camera className="!size-8" />
         </Button>
         <Button variant="ghost" size="icon" onClick={toggleCamera} className="rounded-full">
           <RotateCcw className="!size-5" />
