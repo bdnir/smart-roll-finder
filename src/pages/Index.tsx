@@ -213,38 +213,38 @@ export default function Index() {
       </div>
 
       <header className="px-5 pt-6 pb-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl scan-button-gradient flex items-center justify-center shadow-glow">
-              <ShoppingCart className="text-primary-foreground size-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">
-                <span className="kinetic-text text-gradient-cyber">BuySmart</span>
-              </h1>
-              <p className="text-xs text-muted-foreground font-medium">מחשבון עלות חכם</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl scan-button-gradient flex items-center justify-center shadow-glow">
+            <ShoppingCart className="text-primary-foreground size-5" />
           </div>
-          <button
-            onClick={() => setHelpOpen(true)}
-            aria-label="עזרה"
-            className="w-10 h-10 rounded-2xl glass flex items-center justify-center text-muted-foreground hover:text-foreground transition-all hover:-translate-y-0.5 active:scale-95"
-          >
-            <Info className="size-4" />
-          </button>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              <span className="kinetic-text text-gradient-cyber">BuySmart</span>
+            </h1>
+            <p className="text-xs text-muted-foreground font-medium">מחשבון עלות חכם</p>
+          </div>
         </div>
       </header>
 
       {/* Bento: Scan CTA + quick stats */}
-      <div className="px-4 pt-2 pb-4">
-        <div className={`grid gap-3 ${hasItems ? "grid-cols-1" : "grid-cols-1"}`}>
+      <div className={`px-4 pt-2 pb-4 ${hasItems ? "" : "flex-1 flex items-center justify-center"}`}>
+        <div className="grid gap-3 grid-cols-1 w-full">
           <div className="glass rounded-3xl p-6 flex flex-col items-center gap-3 card-elevated animate-spring-in">
             <div className="w-full max-w-xs animate-scan-glow">
               <ScanButton onClick={handleScanStart} />
             </div>
-            <p className="text-xs text-muted-foreground text-center max-w-xs">
-              צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה
-            </p>
+            <div className="flex items-center gap-2 max-w-xs">
+              <p className="text-xs text-muted-foreground text-center">
+                צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה
+              </p>
+              <button
+                onClick={() => setHelpOpen(true)}
+                aria-label="עזרה"
+                className="shrink-0 w-7 h-7 rounded-full glass flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95"
+              >
+                <Info className="size-3.5" />
+              </button>
+            </div>
           </div>
 
           {hasItems && (
