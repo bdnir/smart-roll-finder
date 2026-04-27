@@ -15,13 +15,13 @@ export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
   const rankColor = (rank?: "best" | "mid" | "worst") => {
     switch (rank) {
       case "best":
-        return "border-green-500 bg-green-500/10";
+        return "ring-2 ring-emerald-400/80 bg-emerald-500/5 shadow-[0_8px_30px_-8px_hsl(160_70%_45%/0.35)]";
       case "mid":
-        return "border-yellow-500 bg-yellow-500/10";
+        return "ring-1 ring-amber-300/60 bg-amber-500/5";
       case "worst":
-        return "border-red-500 bg-red-500/10";
+        return "ring-1 ring-rose-300/60 bg-rose-500/5";
       default:
-        return "border-border bg-card";
+        return "ring-1 ring-border bg-card";
     }
   };
 
@@ -52,22 +52,29 @@ export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col" dir="rtl">
+    <div className="min-h-[100dvh] flex flex-col relative overflow-hidden" dir="rtl">
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="blob absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/20 blur-3xl" />
+        <div className="blob absolute bottom-0 -left-20 w-64 h-64 rounded-full bg-accent/20 blur-3xl" style={{ animationDelay: "-3s" }} />
+      </div>
+
       {/* Header */}
-      <header className="p-4 flex items-center gap-3 border-b border-border">
-        <Button variant="ghost" size="icon" onClick={onClose}>
+      <header className="p-4 flex items-center gap-3 glass sticky top-0 z-10">
+        <Button variant="ghost" size="icon" onClick={onClose} className="rounded-2xl">
           <ArrowRight className="size-5" />
         </Button>
         <div>
-          <h1 className="text-lg font-bold text-foreground">השוואת מוצרים</h1>
+          <h1 className="text-xl font-extrabold tracking-tight">
+            <span className="text-gradient-cyber">השוואת מוצרים</span>
+          </h1>
           {result.category && (
             <p className="text-xs text-muted-foreground">קטגוריה: {result.category}</p>
           )}
         </div>
       </header>
 
-      {/* Results Grid */}
-      <div className="flex-1 overflow-auto p-3">
+      {/* Results Grid (bento) */}
+      <div className="flex-1 overflow-auto p-4">
         {variants.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
             <p className="text-sm">לא נמצאו מוצרים בתמונה</p>
@@ -76,9 +83,11 @@ export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {variants.map((v) => (
-              <VariantCard key={v.id} variant={v} rankColor={rankColor} rankBadge={rankBadge} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {variants.map((v, i) => (
+              <div key={v.id} className="animate-spring-in" style={{ animationDelay: `${i * 40}ms` }}>
+                <VariantCard variant={v} rankColor={rankColor} rankBadge={rankBadge} />
+              </div>
             ))}
           </div>
         )}
@@ -100,7 +109,7 @@ function VariantCard({
 
   return (
     <div
-      className={`rounded-xl border-2 p-2 flex flex-col gap-1.5 transition-all duration-200 ${rankColor(v.rank)}`}
+      className={`rounded-2xl p-2.5 flex flex-col gap-1.5 transition-all duration-200 glass spring-hover ${rankColor(v.rank)}`}
     >
       {/* Cropped product image */}
       <div className="w-full aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center">

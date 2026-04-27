@@ -115,7 +115,7 @@ export function ProductCard({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         style={{ transform: `translateX(${offset}px)` }}
-        className={`bg-card rounded-2xl p-3 card-elevated transition-all duration-200 animate-slide-up ${rankBorder[rank]}`}
+        className={`glass rounded-3xl p-3.5 card-elevated transition-all duration-300 animate-slide-up spring-hover ${rankBorder[rank]}`}
       >
         <div className="flex items-stretch gap-3">
           {/* Right (RTL first): name & details */}
