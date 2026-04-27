@@ -14,14 +14,14 @@ interface ProductCardProps {
 }
 
 const rankBorder: Record<string, string> = {
-  best: "border-2 border-emerald-500",
-  worst: "border-2 border-red-500",
-  mid: "border-2 border-amber-400",
+  best: "ring-2 ring-emerald-400/70 shadow-[0_8px_30px_-8px_hsl(160_70%_45%/0.4)]",
+  worst: "ring-2 ring-rose-400/60",
+  mid: "ring-1 ring-amber-300/50",
 };
 
 const rankPriceColor: Record<string, string> = {
   best: "text-emerald-600",
-  worst: "text-red-600",
+  worst: "text-rose-600",
   mid: "text-amber-600",
 };
 

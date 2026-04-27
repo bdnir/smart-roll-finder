@@ -168,11 +168,19 @@ export default function Index() {
 
   if (state.step === "loading") {
     return (
-      <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center gap-4">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-muted-foreground font-medium">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-5 px-6">
+        <div className="relative w-20 h-20">
+          <div className="absolute inset-0 rounded-full scan-button-gradient blur-2xl opacity-60 animate-pulse" />
+          <div className="relative w-20 h-20 rounded-full border-4 border-primary/30 border-t-primary border-r-accent animate-spin" />
+        </div>
+        <p className="text-foreground/80 font-semibold tracking-tight">
           {state.loadingMode === "price" ? "מנתח את תג המחיר..." : "מנתח את התמונה..."}
         </p>
+        <div className="w-full max-w-xs space-y-2">
+          <div className="h-3 rounded-full bg-muted animate-pulse" />
+          <div className="h-3 rounded-full bg-muted animate-pulse w-4/5" />
+          <div className="h-3 rounded-full bg-muted animate-pulse w-2/3" />
+        </div>
       </div>
     );
   }
