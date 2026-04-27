@@ -29,7 +29,7 @@ export function ComparisonResults({ result, onClose }: ComparisonResultsProps) {
     switch (rank) {
       case "best":
         return (
-          <Badge className="bg-green-500 text-white text-[9px] gap-0.5 px-1.5 py-0">
+          <Badge className="scan-button-gradient text-primary-foreground border-0 text-[9px] gap-0.5 px-1.5 py-0 shadow-glow">
             <Trophy className="size-2.5" />
             הכי משתלם
           </Badge>

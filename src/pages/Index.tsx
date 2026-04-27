@@ -17,7 +17,7 @@ import {
 import { checkQuota, saveScan, uploadScanImage, QuotaExceededError } from "@/lib/scan-service";
 import { playSuccessBeep } from "@/lib/audio";
 import { AIExtraction, ScanResult } from "@/types/scan";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 type AppState =
   | { step: "home" }
@@ -32,7 +32,7 @@ export default function Index() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const [lastScannedId, setLastScannedId] = useState<string | null>(null);
-  const { toast } = useToast();
+  
 
   useEffect(() => {
     setHistory(getHistory());
@@ -66,10 +66,8 @@ export default function Index() {
     try {
       const allowed = await checkQuota();
       if (!allowed) {
-        toast({
-          title: "מגבלת שימוש",
+        toast.error("מגבלת שימוש", {
           description: "מצטערים, עקב עומס שימוש השירות אינו זמין כרגע. השירות יתחדש מחר.",
-          variant: "destructive",
         });
         return;
       }
@@ -92,13 +90,13 @@ export default function Index() {
           updateHistoryItem(targetId, { price: extraction.price });
           refreshHistory();
           playSuccessBeep();
-          toast({ title: "המחיר עודכן" });
+          toast.success("המחיר עודכן");
         } else {
-          toast({ title: "שגיאה", description: SCAN_FAIL_MSG, variant: "destructive" });
+          toast.error("שגיאה", { description: SCAN_FAIL_MSG });
         }
       } catch (e) {
         const msg = e instanceof QuotaExceededError ? e.message : SCAN_FAIL_MSG;
-        toast({ title: "שגיאה", description: msg, variant: "destructive" });
+        toast.error("שגיאה", { description: msg });
       }
       setState({ step: "home" });
       return;
@@ -113,7 +111,7 @@ export default function Index() {
       const hasName = !!(extraction.productName || extraction.companyName);
       const hasUnits = !!extraction.unitCount;
       if (!hasName || !hasUnits) {
-        toast({ title: "שגיאה", description: SCAN_FAIL_MSG, variant: "destructive" });
+        toast.error("שגיאה", { description: SCAN_FAIL_MSG });
         setState({ step: "home" });
         return;
       }
@@ -152,7 +150,7 @@ export default function Index() {
       })();
     } catch (e) {
       const msg = e instanceof QuotaExceededError ? e.message : SCAN_FAIL_MSG;
-      toast({ title: "שגיאה", description: msg, variant: "destructive" });
+      toast.error("שגיאה", { description: msg });
       setState({ step: "home" });
     }
   };
