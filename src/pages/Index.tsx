@@ -194,46 +194,72 @@ export default function Index() {
     setState({ step: "camera", mode: "price", targetId: id });
   };
 
-  return (
-    <div className="min-h-[100dvh] bg-background flex flex-col">
-      <header className="p-5 pb-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl scan-button-gradient flex items-center justify-center">
-            <ShoppingCart className="text-primary-foreground size-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">BuySmart</h1>
-            <p className="text-xs text-muted-foreground">מחשבון עלות</p>
-          </div>
-        </div>
-      </header>
+  const bestItem = rankedHistory.find((r) => r.rank === "best");
 
-      <div
-        className={`flex flex-col items-center px-6 gap-3 transition-all duration-500 ease-out ${
-          hasItems ? "pt-2 pb-4" : "flex-1 justify-center py-8"
-        }`}
-      >
-        <div className="w-full max-w-xs animate-scan-glow">
-          <ScanButton onClick={handleScanStart} />
-        </div>
-        <div className="flex items-center gap-2 max-w-xs w-full justify-center">
+  return (
+    <div className="min-h-[100dvh] flex flex-col relative overflow-hidden">
+      {/* Decorative cyber blobs */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="blob absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/25 blur-3xl" />
+        <div className="blob absolute top-40 -left-24 w-72 h-72 rounded-full bg-accent/25 blur-3xl" style={{ animationDelay: "-4s" }} />
+      </div>
+
+      <header className="px-5 pt-6 pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl scan-button-gradient flex items-center justify-center shadow-glow">
+              <ShoppingCart className="text-primary-foreground size-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight">
+                <span className="kinetic-text text-gradient-cyber">BuySmart</span>
+              </h1>
+              <p className="text-xs text-muted-foreground font-medium">מחשבון עלות חכם</p>
+            </div>
+          </div>
           <button
             onClick={() => setHelpOpen(true)}
             aria-label="עזרה"
-            className="p-1 rounded-full text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            className="w-10 h-10 rounded-2xl glass flex items-center justify-center text-muted-foreground hover:text-foreground transition-all hover:-translate-y-0.5 active:scale-95"
           >
             <Info className="size-4" />
           </button>
-          <p className="text-xs text-muted-foreground text-center">
-            צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה
-          </p>
+        </div>
+      </header>
+
+      {/* Bento: Scan CTA + quick stats */}
+      <div className="px-4 pt-2 pb-4">
+        <div className={`grid gap-3 ${hasItems ? "grid-cols-1" : "grid-cols-1"}`}>
+          <div className="glass rounded-3xl p-6 flex flex-col items-center gap-3 card-elevated animate-spring-in">
+            <div className="w-full max-w-xs animate-scan-glow">
+              <ScanButton onClick={handleScanStart} />
+            </div>
+            <p className="text-xs text-muted-foreground text-center max-w-xs">
+              צלם את הנתונים על האריזה כדי לחשב את מחיר היחידה
+            </p>
+          </div>
+
+          {hasItems && (
+            <div className="grid grid-cols-2 gap-3 animate-fade-in">
+              <div className="glass rounded-2xl p-4 flex flex-col gap-1">
+                <span className="text-[11px] text-muted-foreground font-medium">סה״כ סריקות</span>
+                <span className="text-2xl font-extrabold text-gradient-cyber leading-none">{history.length}</span>
+              </div>
+              <div className="glass rounded-2xl p-4 flex flex-col gap-1">
+                <span className="text-[11px] text-muted-foreground font-medium">הכי משתלם</span>
+                <span className="text-sm font-bold truncate">
+                  {bestItem ? (bestItem.item.companyName || bestItem.item.productName || "—") : "—"}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {hasItems && (
-        <div className="px-4 pb-6 flex-1">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-foreground">סריקות אחרונות</h2>
+        <div className="px-4 pb-8 flex-1">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 className="text-sm font-bold text-foreground tracking-tight">סריקות אחרונות</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -241,7 +267,7 @@ export default function Index() {
                 clearHistory();
                 refreshHistory();
               }}
-              className="text-xs text-muted-foreground"
+              className="text-xs text-muted-foreground rounded-xl"
             >
               <Trash2 className="size-3" />
               נקה הכל
