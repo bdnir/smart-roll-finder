@@ -14,14 +14,14 @@ interface ProductCardProps {
 }
 
 const rankBorder: Record<string, string> = {
-  best: "border-2 border-emerald-500",
-  worst: "border-2 border-red-500",
-  mid: "border-2 border-amber-400",
+  best: "ring-2 ring-emerald-400/70 shadow-[0_8px_30px_-8px_hsl(160_70%_45%/0.4)]",
+  worst: "ring-2 ring-rose-400/60",
+  mid: "ring-1 ring-amber-300/50",
 };
 
 const rankPriceColor: Record<string, string> = {
   best: "text-emerald-600",
-  worst: "text-red-600",
+  worst: "text-rose-600",
   mid: "text-amber-600",
 };
 
@@ -115,7 +115,7 @@ export function ProductCard({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         style={{ transform: `translateX(${offset}px)` }}
-        className={`bg-card rounded-2xl p-3 card-elevated transition-all duration-200 animate-slide-up ${rankBorder[rank]}`}
+        className={`glass rounded-3xl p-3.5 card-elevated transition-all duration-300 animate-slide-up spring-hover ${rankBorder[rank]}`}
       >
         <div className="flex items-stretch gap-3">
           {/* Right (RTL first): name & details */}
