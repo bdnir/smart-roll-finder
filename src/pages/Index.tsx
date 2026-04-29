@@ -5,7 +5,15 @@ import { ScanButton } from "@/components/ScanButton";
 import { ProductCard } from "@/components/ProductCard";
 import { CameraCapture } from "@/components/CameraCapture";
 import { HelpModal } from "@/components/HelpModal";
-import { InstallPromptModal, recordScanForInstallPrompt } from "@/components/InstallPromptModal";
+import { InstallPromptModal } from "@/components/InstallPromptModal";
+import { InstallHeaderButton } from "@/components/InstallHeaderButton";
+import {
+  recordScanForInstallPrompt,
+  getDeferredPrompt,
+  triggerInstall,
+  isIOS,
+  isAppInstalled,
+} from "@/lib/pwa-install";
 import { analyzeImage } from "@/lib/ai";
 import {
   getHistory,
@@ -139,8 +147,16 @@ export default function Index() {
       setLastScannedId(result.id);
       playSuccessBeep();
       setState({ step: "home" });
-      if (recordScanForInstallPrompt() === "show") {
-        setTimeout(() => setInstallOpen(true), 600);
+      if (recordScanForInstallPrompt() === "show" && !isAppInstalled()) {
+        setTimeout(async () => {
+          // Try native prompt first if available and not iOS
+          if (!isIOS() && getDeferredPrompt()) {
+            const ok = await triggerInstall("auto");
+            if (!ok) setInstallOpen(true);
+          } else {
+            setInstallOpen(true);
+          }
+        }, 600);
       }
 
       // Background: upload + save
@@ -212,14 +228,17 @@ export default function Index() {
 
       <header className="px-5 pt-6 pb-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl scan-button-gradient flex items-center justify-center shadow-glow">
-            <ShoppingCart className="text-primary-foreground size-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">
-              <span className="kinetic-text text-gradient-cyber">BuySmart</span>
-            </h1>
-            <p className="text-xs text-muted-foreground font-medium">מחשבון עלות חכם</p>
+          <InstallHeaderButton />
+          <div className="flex items-center gap-3 ms-auto">
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight text-right">
+                <span className="kinetic-text text-gradient-cyber">BuySmart</span>
+              </h1>
+              <p className="text-xs text-muted-foreground font-medium text-right">מחשבון עלות חכם</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl scan-button-gradient flex items-center justify-center shadow-glow">
+              <ShoppingCart className="text-primary-foreground size-5" />
+            </div>
           </div>
         </div>
       </header>
