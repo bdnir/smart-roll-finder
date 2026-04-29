@@ -9,59 +9,24 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Share, Plus, ChevronDown } from "lucide-react";
+import {
+  deferInstallPrompt,
+  getDeferredPrompt,
+  isIOS,
+  triggerInstall,
+} from "@/lib/pwa-install";
 
-const SCAN_COUNTER_KEY = "buysmart_total_scans";
-const NEXT_PROMPT_KEY = "buysmart_next_install_prompt_at";
-const INSTALLED_KEY = "buysmart_installed";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-function isStandalone(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    // iOS Safari
-    (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
-    localStorage.getItem(INSTALLED_KEY) === "true"
-  );
-}
-
-function isIOS(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent;
-  return /iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream;
-}
-
-export function recordScanForInstallPrompt(): "show" | null {
-  if (isStandalone()) return null;
-  const current = parseInt(localStorage.getItem(SCAN_COUNTER_KEY) || "0", 10) + 1;
-  localStorage.setItem(SCAN_COUNTER_KEY, String(current));
-  const nextAt = parseInt(localStorage.getItem(NEXT_PROMPT_KEY) || "5", 10);
-  if (current >= nextAt) return "show";
-  return null;
-}
-
-let deferredPrompt: BeforeInstallPromptEvent | null = null;
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e as BeforeInstallPromptEvent;
-  });
-  window.addEventListener("appinstalled", () => {
-    localStorage.setItem(INSTALLED_KEY, "true");
-    deferredPrompt = null;
-  });
-}
+// Re-export for backwards compatibility with existing imports
+export { recordScanForInstallPrompt } from "@/lib/pwa-install";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** "auto" when triggered by the 3-scan rule, "manual" when from header button */
+  source?: "auto" | "manual";
 }
 
-export function InstallPromptModal({ open, onOpenChange }: Props) {
+export function InstallPromptModal({ open, onOpenChange, source = "auto" }: Props) {
   const [ios, setIos] = useState(false);
 
   useEffect(() => {
@@ -69,30 +34,19 @@ export function InstallPromptModal({ open, onOpenChange }: Props) {
   }, []);
 
   const handleDismiss = () => {
-    const current = parseInt(localStorage.getItem(SCAN_COUNTER_KEY) || "0", 10);
-    localStorage.setItem(NEXT_PROMPT_KEY, String(current + 10));
+    deferInstallPrompt();
     onOpenChange(false);
   };
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      try {
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
-        if (choice.outcome === "accepted") {
-          localStorage.setItem(INSTALLED_KEY, "true");
-        }
-        deferredPrompt = null;
+    if (getDeferredPrompt()) {
+      const ok = await triggerInstall(source);
+      if (ok) {
         onOpenChange(false);
         return;
-      } catch {
-        // fall through
       }
     }
-    if (!ios) {
-      // No native prompt available; defer
-      handleDismiss();
-    }
+    if (!ios) handleDismiss();
   };
 
   return (

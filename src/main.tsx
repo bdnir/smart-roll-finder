@@ -1,6 +1,9 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { initPwa } from "./lib/pwa-install";
+
+initPwa();
 
 // PWA: Unregister service workers in preview/iframe contexts
 const isInIframe = (() => {
